@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Just Store</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="admin-styles.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">
+            <i class="fas fa-crown"></i>
+        </div>
+        <h4 class="logo-text">Just Admin</h4>
+        <p class="logo-subtitle">Control Panel</p>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-link active" data-tab="dashboard">
+            <div class="nav-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <span>Dashboard</span>
+            <div class="nav-indicator"></div>
+        </a>
+        <a href="#categories" class="nav-link" data-tab="categories">
+            <div class="nav-icon">
+                <i class="fas fa-tags"></i>
+            </div>
+            <span>Kategoriyalar</span>
+            <div class="nav-indicator"></div>
+        </a>
+        <a href="#products" class="nav-link" data-tab="products">
+            <div class="nav-icon">
+                <i class="fas fa-box-open"></i>
+            </div>
+            <span>Mahsulotlar</span>
+            <div class="nav-indicator"></div>
+        </a>
+        <a href="#users" class="nav-link" data-tab="users">
+            <div class="nav-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <span>Foydalanuvchilar</span>
+            <div class="nav-indicator"></div>
+        </a>
+        <a href="#attachments" class="nav-link" data-tab="attachments">
+            <div class="nav-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <span>Fayllar</span>
+            <div class="nav-indicator"></div>
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-profile">
+            <div class="user-avatar">
+                <i class="fas fa-user-crown"></i>
+            </div>
+            <div class="user-info">
+                <div class="user-name">Admin</div>
+                <div class="user-role">Super Admin</div>
+            </div>
+        </div>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Chiqish</span>
+        </button>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-left">
+            <button class="sidebar-toggle" id="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="breadcrumb">
+                <h1 id="page-title">Dashboard</h1>
+                <p id="page-subtitle">Boshqaruv paneli</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="header-actions">
+                <button class="header-btn" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="header-btn" onclick="toggleFullscreen()">
+                    <i class="fas fa-expand"></i>
+                </button>
+                <a href="index.html" class="header-btn">
+                    <i class="fas fa-external-link-alt"></i>
+                    <span>Saytga o'tish</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Dashboard Tab -->
+    <div class="tab-content active" id="dashboard-tab">
+        <div class="stats-grid">
+            <div class="stats-card primary">
+                <div class="stats-icon">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number" id="total-categories">0</div>
+                    <div class="stats-label">Kategoriyalar</div>
+                    <div class="stats-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+12%</span>
+                    </div>
+                </div>
+                <div class="stats-chart">
+                    <div class="chart-bar" style="height: 60%"></div>
+                    <div class="chart-bar" style="height: 80%"></div>
+                    <div class="chart-bar" style="height: 40%"></div>
+                    <div class="chart-bar" style="height: 90%"></div>
+                    <div class="chart-bar" style="height: 70%"></div>
+                </div>
+            </div>
+
+            <div class="stats-card success">
+                <div class="stats-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number" id="total-products">0</div>
+                    <div class="stats-label">Mahsulotlar</div>
+                    <div class="stats-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+8%</span>
+                    </div>
+                </div>
+                <div class="stats-chart">
+                    <div class="chart-bar" style="height: 70%"></div>
+                    <div class="chart-bar" style="height: 50%"></div>
+                    <div class="chart-bar" style="height: 90%"></div>
+                    <div class="chart-bar" style="height: 60%"></div>
+                    <div class="chart-bar" style="height: 80%"></div>
+                </div>
+            </div>
+
+            <div class="stats-card warning">
+                <div class="stats-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number" id="total-users">0</div>
+                    <div class="stats-label">Foydalanuvchilar</div>
+                    <div class="stats-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+15%</span>
+                    </div>
+                </div>
+                <div class="stats-chart">
+                    <div class="chart-bar" style="height: 80%"></div>
+                    <div class="chart-bar" style="height: 60%"></div>
+                    <div class="chart-bar" style="height: 70%"></div>
+                    <div class="chart-bar" style="height: 90%"></div>
+                    <div class="chart-bar" style="height: 50%"></div>
+                </div>
+            </div>
+
+            <div class="stats-card info">
+                <div class="stats-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number" id="total-attachments">0</div>
+                    <div class="stats-label">Fayllar</div>
+                    <div class="stats-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+5%</span>
+                    </div>
+                </div>
+                <div class="stats-chart">
+                    <div class="chart-bar" style="height: 50%"></div>
+                    <div class="chart-bar" style="height: 70%"></div>
+                    <div class="chart-bar" style="height: 60%"></div>
+                    <div class="chart-bar" style="height: 80%"></div>
+                    <div class="chart-bar" style="height: 90%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>So'nggi kategoriyalar</h3>
+                    <button class="card-action" onclick="loadCategories()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="recent-categories" class="recent-items">
+                        <div class="loading-state">
+                            <div class="loading-spinner"></div>
+                            <p>Yuklanmoqda...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>So'nggi mahsulotlar</h3>
+                    <button class="card-action" onclick="loadProducts()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="recent-products" class="recent-items">
+                        <div class="loading-state">
+                            <div class="loading-spinner"></div>
+                            <p>Yuklanmoqda...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Tab -->
+    <div class="tab-content" id="categories-tab">
+        <div class="content-grid">
+            <div class="form-card">
+                <div class="card-header">
+                    <h3>Kategoriya qo'shish</h3>
+                    <div class="card-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form id="category-form" class="modern-form">
+                        <div class="form-group">
+                            <label class="form-label">Kategoriya nomi</label>
+                            <input type="text" class="form-control" id="category-name" placeholder="Kategoriya nomini kiriting" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Rasm</label>
+                            <div class="file-upload-area" id="category-upload">
+                                <div class="upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="upload-text">
+                                    <p>Rasm yuklash uchun bosing yoki shu yerga tashlang</p>
+                                    <span>PNG, JPG, JPEG (Max: 5MB)</span>
+                                </div>
+                                <input type="file" id="category-image" accept="image/*" hidden>
+                            </div>
+                            <div class="uploaded-preview" id="category-preview"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="category-active" checked>
+                                <label for="category-active">
+                                    <span class="toggle-slider"></span>
+                                    <span class="toggle-label">Faol holat</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="submit-btn">
+                            <i class="fas fa-plus"></i>
+                            <span>Kategoriya qo'shish</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="card-header">
+                    <h3>Kategoriyalar ro'yxati</h3>
+                    <div class="card-actions">
+                        <button class="card-action" onclick="loadCategories()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="card-action">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="modern-table">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Rasm</th>
+                                <th>Nomi</th>
+                                <th>Holati</th>
+                                <th>Amallar</th>
+                            </tr>
+                            </thead>
+                            <tbody id="categories-table">
+                            <!-- Categories will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Tab -->
+    <div class="tab-content" id="products-tab">
+        <div class="content-grid">
+            <div class="form-card">
+                <div class="card-header">
+                    <h3>Mahsulot qo'shish</h3>
+                    <div class="card-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form id="product-form" class="modern-form">
+                        <div class="form-group">
+                            <label class="form-label">Mahsulot nomi</label>
+                            <input type="text" class="form-control" id="product-name" placeholder="Mahsulot nomini kiriting" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Tavsif</label>
+                            <textarea class="form-control" id="product-description" rows="3" placeholder="Mahsulot tavsifini kiriting"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Narx (so'm)</label>
+                                <input type="number" class="form-control" id="product-price" placeholder="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Miqdor</label>
+                                <input type="number" class="form-control" id="product-amount" placeholder="0" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Kategoriya</label>
+                            <select class="form-control" id="product-category" required>
+                                <option value="">Kategoriyani tanlang</option>
+                                <!-- Categories will be loaded here -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Rasmlar</label>
+                            <div class="file-upload-area" id="product-upload">
+                                <div class="upload-icon">
+                                    <i class="fas fa-images"></i>
+                                </div>
+                                <div class="upload-text">
+                                    <p>Rasmlarni yuklash uchun bosing yoki shu yerga tashlang</p>
+                                    <span>PNG, JPG, JPEG (Max: 5MB har biri)</span>
+                                </div>
+                                <input type="file" id="product-images" accept="image/*" multiple hidden>
+                            </div>
+                            <div class="uploaded-preview" id="product-preview"></div>
+                        </div>
+
+                        <button type="submit" class="submit-btn">
+                            <i class="fas fa-plus"></i>
+                            <span>Mahsulot qo'shish</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="card-header">
+                    <h3>Mahsulotlar ro'yxati</h3>
+                    <div class="card-actions">
+                        <button class="card-action" onclick="loadProducts()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="card-action">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="modern-table">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Rasm</th>
+                                <th>Nomi</th>
+                                <th>Narx</th>
+                                <th>Miqdor</th>
+                                <th>Kategoriya</th>
+                                <th>Amallar</th>
+                            </tr>
+                            </thead>
+                            <tbody id="products-table">
+                            <!-- Products will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div class="tab-content" id="users-tab">
+        <div class="table-card full-width">
+            <div class="card-header">
+                <h3>Foydalanuvchilar ro'yxati</h3>
+                <div class="card-actions">
+                    <button class="card-action" onclick="loadUsers()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="card-action">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="modern-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Ism</th>
+                            <th>Email</th>
+                            <th>Telefon</th>
+                            <th>Holati</th>
+                            <th>Amallar</th>
+                        </tr>
+                        </thead>
+                        <tbody id="users-table">
+                        <!-- Users will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attachments Tab -->
+    <div class="tab-content" id="attachments-tab">
+        <div class="content-grid">
+            <div class="form-card">
+                <div class="card-header">
+                    <h3>Fayl yuklash</h3>
+                    <div class="card-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form id="upload-form" class="modern-form">
+                        <div class="form-group">
+                            <label class="form-label">Fayllarni tanlang</label>
+                            <div class="file-upload-area" id="files-upload">
+                                <div class="upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="upload-text">
+                                    <p>Fayllarni yuklash uchun bosing yoki shu yerga tashlang</p>
+                                    <span>Barcha fayl turlari qo'llab-quvvatlanadi</span>
+                                </div>
+                                <input type="file" id="upload-files" multiple hidden>
+                            </div>
+                            <div class="uploaded-preview" id="files-preview"></div>
+                        </div>
+
+                        <button type="submit" class="submit-btn">
+                            <i class="fas fa-upload"></i>
+                            <span>Fayllarni yuklash</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="files-grid" id="uploaded-files">
+                <!-- Uploaded files will be displayed here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Kategoriyani tahrirlash</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-category-form" class="modern-form">
+                    <input type="hidden" id="edit-category-id">
+                    <div class="form-group">
+                        <label class="form-label">Kategoriya nomi</label>
+                        <input type="text" class="form-control" id="edit-category-name" required>
+                    </div>
+                    <div class="form-group">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="edit-category-active">
+                            <label for="edit-category-active">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Faol holat</span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-primary" onclick="updateCategory()">Saqlash</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="admin-script.js"></script>
+</body>
+</html>
