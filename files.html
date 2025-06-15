@@ -190,11 +190,11 @@
 
         <!-- Files Grid -->
         <div class="row">
-            <!-- Recently Uploaded -->
+            <!-- So'nggi 7 kun ichida yuklangan -->
             <div class="col-lg-4 mb-4">
                 <div class="table-card">
                     <div class="card-header">
-                        <h3>So'nggi yuklangan (7 kun)</h3>
+                        <h3>So'nggi 7 kun ichida yuklangan</h3>
                         <div class="card-actions">
                             <button class="card-action" onclick="loadRecentUploaded()">
                                 <i class="fas fa-sync-alt"></i>
@@ -223,11 +223,11 @@
                 </div>
             </div>
 
-            <!-- Recently Modified -->
+            <!-- So'nggi 7 kun ichida yangilangan -->
             <div class="col-lg-4 mb-4">
                 <div class="table-card">
                     <div class="card-header">
-                        <h3>So'nggi o'zgartirilgan (7 kun)</h3>
+                        <h3>So'nggi 7 kun ichida yangilangan</h3>
                         <div class="card-actions">
                             <button class="card-action" onclick="loadRecentModified()">
                                 <i class="fas fa-sync-alt"></i>
@@ -256,7 +256,7 @@
                 </div>
             </div>
 
-            <!-- Unlinked Images -->
+            <!-- Bog'lanmagan rasmlar -->
             <div class="col-lg-4 mb-4">
                 <div class="table-card">
                     <div class="card-header">
@@ -330,7 +330,7 @@
 </div>
 
 <!-- View File Modal -->
-<div class="modal fade" id="viewFileModal" tabindex="-1">
+<div class="modal fade" id="viewFileModal" tabindex="-1" style="z-index: 1060;">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content modern-modal">
             <div class="modal-header">
@@ -395,6 +395,127 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Yopish</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activation/Deactivation Modal -->
+<div class="modal fade" id="activationModal" tabindex="-1" style="z-index: 1070;">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Faollashtirish/Nofaollashtirish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-container">
+                    <table class="modern-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nomi</th>
+                            <th>Product ID</th>
+                            <th>Holati</th>
+                            <th>Amallar</th>
+                        </tr>
+                        </thead>
+                        <tbody id="activation-table">
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">Yuklanmoqda...</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Yopish</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Replace Image Modal -->
+<div class="modal fade" id="replaceImageModal" tabindex="-1" style="z-index: 1070;">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Rasmni almashtirish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-container">
+                    <table class="modern-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nomi</th>
+                            <th>Product ID</th>
+                            <th>Amallar</th>
+                        </tr>
+                        </thead>
+                        <tbody id="replace-image-table">
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">Yuklanmoqda...</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Yopish</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Image Modal -->
+<div class="modal fade" id="updateImageModal" tabindex="-1" style="z-index: 1080;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Rasmni yangilash</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="update-image-form" class="modern-form">
+                    <input type="hidden" id="update-attachment-id">
+                    <div class="form-group">
+                        <label class="form-label">ID</label>
+                        <input type="text" class="form-control" id="update-attachment-id-display" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nomi</label>
+                        <input type="text" class="form-control" id="update-attachment-name" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Avvalgi rasm</label>
+                        <div id="current-image-preview" class="mb-3">
+                            <!-- Current image preview -->
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Yangi rasm</label>
+                        <div class="file-upload-area" id="update-file-upload-area">
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div class="upload-text">
+                                <p>Yangi rasm yuklash uchun bosing</p>
+                                <span>PNG, JPG, JPEG (Max: 10MB)</span>
+                            </div>
+                            <input type="file" id="update-file-input" accept="image/*" hidden>
+                        </div>
+                        <div class="uploaded-preview" id="update-file-preview"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-primary" onclick="updateAttachment()">
+                    <i class="fas fa-save"></i>
+                    <span>Yangilash</span>
+                </button>
             </div>
         </div>
     </div>

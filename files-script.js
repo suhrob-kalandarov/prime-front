@@ -28,6 +28,7 @@ function checkAuth() {
 function initializeFilesPanel() {
     setupSidebar()
     setupFileUpload()
+    setupUpdateFileUpload()
     setupEventListeners()
 }
 
@@ -46,6 +47,42 @@ function setupFileUpload() {
     const uploadArea = document.getElementById("file-upload-area")
     const fileInput = document.getElementById("file-input")
     const preview = document.getElementById("file-preview")
+
+    if (!uploadArea || !fileInput || !preview) return
+
+    uploadArea.addEventListener("click", () => fileInput.click())
+
+    uploadArea.addEventListener("dragover", (e) => {
+        e.preventDefault()
+        uploadArea.classList.add("dragover")
+    })
+
+    uploadArea.addEventListener("dragleave", () => {
+        uploadArea.classList.remove("dragover")
+    })
+
+    uploadArea.addEventListener("drop", (e) => {
+        e.preventDefault()
+        uploadArea.classList.remove("dragover")
+        const files = e.dataTransfer.files
+        if (files.length > 0) {
+            fileInput.files = files
+            handleFilePreview(files[0], preview)
+        }
+    })
+
+    fileInput.addEventListener("change", (e) => {
+        if (e.target.files.length > 0) {
+            handleFilePreview(e.target.files[0], preview)
+        }
+    })
+}
+
+// Setup update file upload
+function setupUpdateFileUpload() {
+    const uploadArea = document.getElementById("update-file-upload-area")
+    const fileInput = document.getElementById("update-file-input")
+    const preview = document.getElementById("update-file-preview")
 
     if (!uploadArea || !fileInput || !preview) return
 
@@ -115,7 +152,13 @@ function handleFilePreview(file, preview) {
 // Remove preview
 function removePreview(button) {
     button.parentElement.remove()
-    document.getElementById("file-input").value = ""
+    const parentForm = button.closest('form')
+    if (parentForm) {
+        const fileInput = parentForm.querySelector('input[type="file"]')
+        if (fileInput) {
+            fileInput.value = ""
+        }
+    }
 }
 
 // Setup event listeners
@@ -144,6 +187,9 @@ function setupEventListeners() {
     window.loadRecentUploaded = loadRecentUploaded
     window.loadRecentModified = loadRecentModified
     window.loadUnlinkedImages = loadUnlinkedImages
+    window.toggleAttachmentStatus = toggleAttachmentStatus
+    window.showUpdateImageModal = showUpdateImageModal
+    window.updateAttachment = updateAttachment
 }
 
 // API request with token
@@ -192,7 +238,12 @@ async function loadFilesData() {
     try {
         showLoading()
 
-        await Promise.all([loadAttachmentStats(), loadTodayFiles(), loadWeekFiles(), loadMonthFiles()])
+        await Promise.all([
+            loadAttachmentStats(),
+            loadRecentUploaded(),
+            loadRecentModified(),
+            loadUnlinkedImages()
+        ])
 
         hideLoading()
     } catch (error) {
@@ -206,9 +257,9 @@ async function loadFilesData() {
 async function loadAttachmentStats() {
     try {
         const [total, active, inactive, unlinked] = await Promise.all([
-            apiRequest("/api/v1/admin/attachments/count"),
-            apiRequest("/api/v1/admin/attachments/active-count"),
-            apiRequest("/api/v1/admin/attachments/inactive-count"),
+            apiRequest("/api/v1/admin/attachments").then(data => data?.length || 0),
+            apiRequest("/api/v1/admin/attachments/active").then(data => data?.length || 0),
+            apiRequest("/api/v1/admin/attachments/inactive").then(data => data?.length || 0),
             apiRequest("/api/v1/admin/attachments/no-linked-with-product/count"),
         ])
 
@@ -222,83 +273,92 @@ async function loadAttachmentStats() {
     }
 }
 
+// Load recent uploaded files (last 7 days)
+async function loadRecentUploaded() {
+    try {
+        // Mock data for recent uploaded - in real implementation, you would filter by date
+        const mockData = [
+            { id: 1, filename: "recent1.jpg", productId: 123 },
+            { id: 2, filename: "recent2.png", productId: null },
+        ]
+        renderFilesTable("recent-uploaded-table", mockData)
+    } catch (error) {
+        console.error("Error loading recent uploaded:", error)
+        showNotification("error", "So'nggi yuklangan fayllarni yuklashda xatolik")
+    }
+}
+
+// Load recent modified files (last 7 days)
+async function loadRecentModified() {
+    try {
+        // Mock data for recent modified - in real implementation, you would filter by date
+        const mockData = [
+            { id: 3, filename: "modified1.jpg", productId: 456 }
+        ]
+        renderFilesTable("recent-modified-table", mockData)
+    } catch (error) {
+        console.error("Error loading recent modified:", error)
+        showNotification("error", "So'nggi o'zgartirilgan fayllarni yuklashda xatolik")
+    }
+}
+
+// Load unlinked images
+async function loadUnlinkedImages() {
+    try {
+        // Mock data for unlinked images
+        const mockData = [
+            { id: 4, filename: "unlinked1.jpg", productId: null },
+            { id: 5, filename: "unlinked2.png", productId: null },
+        ]
+        renderFilesTable("unlinked-images-table", mockData)
+    } catch (error) {
+        console.error("Error loading unlinked images:", error)
+        showNotification("error", "Bog'lanmagan rasmlarni yuklashda xatolik")
+    }
+}
+
 // Load today's files
 async function loadTodayFiles() {
     try {
-        // Since there's no specific API for date filtering, we'll simulate it
-        // In real implementation, you would call an API with date parameters
-        const files = await getMockFilesForPeriod("today")
-        todayFiles = files
-        renderFilesTable("today-files-table", files)
+        // Mock data for today's files - in real implementation, you would filter by date
+        const mockData = [
+            { id: 6, filename: "today1.jpg", productId: 789 },
+            { id: 7, filename: "today2.png", productId: null },
+        ]
+        renderFilesTable("today-files-table", mockData)
     } catch (error) {
         console.error("Error loading today's files:", error)
         showNotification("error", "Bugungi fayllarni yuklashda xatolik")
     }
 }
 
-// Load this week's files
+// Load week's files
 async function loadWeekFiles() {
     try {
-        const files = await getMockFilesForPeriod("week")
-        weekFiles = files
-        renderFilesTable("week-files-table", files)
+        // Mock data for week's files - in real implementation, you would filter by date
+        const mockData = [
+            { id: 8, filename: "week1.jpg", productId: 101 },
+            { id: 9, filename: "week2.png", productId: null },
+        ]
+        renderFilesTable("week-files-table", mockData)
     } catch (error) {
         console.error("Error loading week's files:", error)
-        showNotification("error", "Bu hafta fayllarini yuklashda xatolik")
+        showNotification("error", "Hafta fayllarni yuklashda xatolik")
     }
 }
 
-// Load last month's files
+// Load month's files
 async function loadMonthFiles() {
     try {
-        const files = await getMockFilesForPeriod("month")
-        monthFiles = files
-        renderFilesTable("month-files-table", files)
+        // Mock data for month's files - in real implementation, you would filter by date
+        const mockData = [
+            { id: 10, filename: "month1.jpg", productId: 202 },
+            { id: 11, filename: "month2.png", productId: null },
+        ]
+        renderFilesTable("month-files-table", mockData)
     } catch (error) {
         console.error("Error loading month's files:", error)
-        showNotification("error", "Oxirgi oy fayllarini yuklashda xatolik")
-    }
-}
-
-// Mock function to simulate files for different periods
-async function getMockFilesForPeriod(period) {
-    // This is a mock function. In real implementation, you would call the actual API
-    // with date parameters to filter files by period
-    const mockFiles = [
-        {
-            id: 1,
-            filename: "box.jpeg",
-            contentType: "image/jpeg",
-            url: "box.jpeg_1749999806777",
-            active: true,
-            createdAt: "2025-06-15 20:03:27.763663",
-            createdBy: "SYSTEM",
-            updatedAt: "2025-06-15 20:03:27.763663",
-            updatedBy: "SYSTEM",
-        },
-        {
-            id: 2,
-            filename: "product.png",
-            contentType: "image/png",
-            url: "product.png_1749999806778",
-            active: true,
-            createdAt: "2025-06-15 19:30:15.123456",
-            createdBy: "ADMIN",
-            updatedAt: "2025-06-15 19:30:15.123456",
-            updatedBy: "ADMIN",
-        },
-    ]
-
-    // Filter based on period (mock implementation)
-    switch (period) {
-        case "today":
-            return mockFiles.slice(0, 2)
-        case "week":
-            return mockFiles.slice(0, 1)
-        case "month":
-            return mockFiles
-        default:
-            return []
+        showNotification("error", "Oy fayllarni yuklashda xatolik")
     }
 }
 
@@ -322,7 +382,7 @@ function renderFilesTable(tableId, files) {
                 ${file.productId ? `<span class="badge bg-primary">${file.productId}</span>` : '<span class="badge bg-secondary">NO-LINKED</span>'}
             </td>
             <td>
-                <button class="action-btn edit" onclick="viewFile(${file.id})" title="Ko'rish">
+                <button class="action-btn edit" onclick="viewFile(${file.id})" title="Ko\'rish">
                     <i class="fas fa-eye"></i>
                 </button>
             </td>
@@ -437,6 +497,309 @@ async function viewFile(fileId) {
     }
 }
 
+// Show all attachments
+async function showAllAttachments() {
+    try {
+        const data = await apiRequest("/api/v1/admin/attachments")
+        showAttachmentsModal("Barcha rasmlar", data || [])
+    } catch (error) {
+        console.error("Error loading all attachments:", error)
+        showNotification("error", "Barcha rasmlarni yuklashda xatolik")
+    }
+}
+
+// Show active attachments
+async function showActiveAttachments() {
+    try {
+        const data = await apiRequest("/api/v1/admin/attachments/active")
+        showAttachmentsModal("Faol rasmlar", data || [])
+    } catch (error) {
+        console.error("Error loading active attachments:", error)
+        showNotification("error", "Faol rasmlarni yuklashda xatolik")
+    }
+}
+
+// Show inactive attachments
+async function showInactiveAttachments() {
+    try {
+        const data = await apiRequest("/api/v1/admin/attachments/inactive")
+        showAttachmentsModal("Nofaol rasmlar", data || [])
+    } catch (error) {
+        console.error("Error loading inactive attachments:", error)
+        showNotification("error", "Nofaol rasmlarni yuklashda xatolik")
+    }
+}
+
+// Show unlinked attachments
+async function showUnlinkedAttachments() {
+    try {
+        // This would need a specific API endpoint for unlinked attachments
+        showNotification("info", "Bog'lanmagan rasmlar funksiyasi ishlab chiqilmoqda")
+    } catch (error) {
+        console.error("Error loading unlinked attachments:", error)
+        showNotification("error", "Bog'lanmagan rasmlarni yuklashda xatolik")
+    }
+}
+
+// Show attachments modal
+function showAttachmentsModal(title, attachments) {
+    // Create modal dynamically
+    const modalHtml = `
+    <div class="modal fade" id="attachmentsModal" tabindex="-1" style="z-index: 1050;">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content modern-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title">${title}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-container">
+                        <table class="modern-table">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nomi</th>
+                                <th>Product ID</th>
+                                <th>Amallar</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            ${
+        attachments.length > 0
+            ? attachments
+                .map(
+                    (attachment) => `
+                                <tr>
+                                    <td>${attachment.id}</td>
+                                    <td class="text-truncate" style="max-width: 200px;" title="${attachment.filename || attachment.name}">${attachment.filename || attachment.name || "N/A"}</td>
+                                    <td>
+                                        ${attachment.productId ? `<span class="badge bg-primary">${attachment.productId}</span>` : '<span class="badge bg-secondary">NO-LINKED</span>'}
+                                    </td>
+                                    <td>
+                                        <button class="action-btn edit" onclick="viewFile(${attachment.id})" title="Ko\'rish">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `,
+                )
+                .join("")
+            : '<tr><td colspan="4" class="text-center text-muted">Ma\'lumotlar mavjud emas</td></tr>'
+    }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Yopish</button>
+                </div>
+            </div>
+        </div>
+    </div>
+  `
+
+    // Remove existing modal if any
+    const existingModal = document.getElementById("attachmentsModal")
+    if (existingModal) {
+        existingModal.remove()
+    }
+
+    // Add modal to body
+    document.body.insertAdjacentHTML("beforeend", modalHtml)
+
+    const modal = new bootstrap.Modal(document.getElementById("attachmentsModal"))
+    modal.show()
+}
+
+// Show activation modal
+async function showActivationModal() {
+    try {
+        const data = await apiRequest("/api/v1/admin/attachments")
+
+        // Populate activation table
+        const tbody = document.getElementById("activation-table")
+        if (tbody && data) {
+            tbody.innerHTML = data.length > 0
+                ? data.map(attachment => `
+                    <tr>
+                        <td>${attachment.id}</td>
+                        <td class="text-truncate" style="max-width: 200px;" title="${attachment.filename || attachment.name}">${attachment.filename || attachment.name || "N/A"}</td>
+                        <td>
+                            ${attachment.productId ? `<span class="badge bg-primary">${attachment.productId}</span>` : '<span class="badge bg-secondary">NO-LINKED</span>'}
+                        </td>
+                        <td>
+                            <span class="status-badge ${attachment.active ? "active" : "inactive"}">
+                                ${attachment.active ? "FAOL" : "NOFAOL"}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="action-btn edit" onclick="viewFile(${attachment.id})" title="Ko\'rish">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn ${attachment.active ? 'delete' : 'edit'}" onclick="toggleAttachmentStatus(${attachment.id}, ${!attachment.active})" title="${attachment.active ? 'Nofaollashtirish' : 'Faollashtirish'}">
+                                <i class="fas fa-${attachment.active ? 'pause' : 'play'}"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join("")
+                : '<tr><td colspan="5" class="text-center text-muted">Ma\'lumotlar mavjud emas</td></tr>'
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById("activationModal"))
+        modal.show()
+    } catch (error) {
+        console.error("Error loading activation modal:", error)
+        showNotification("error", "Faollashtirish modalini yuklashda xatolik")
+    }
+}
+
+// Show replace image modal
+async function showReplaceImageModal() {
+    try {
+        const data = await apiRequest("/api/v1/admin/attachments/active")
+
+        // Populate replace image table
+        const tbody = document.getElementById("replace-image-table")
+        if (tbody && data) {
+            tbody.innerHTML = data.length > 0
+                ? data.map(attachment => `
+                    <tr>
+                        <td>${attachment.id}</td>
+                        <td class="text-truncate" style="max-width: 200px;" title="${attachment.filename || attachment.name}">${attachment.filename || attachment.name || "N/A"}</td>
+                        <td>
+                            ${attachment.productId ? `<span class="badge bg-primary">${attachment.productId}</span>` : '<span class="badge bg-secondary">NO-LINKED</span>'}
+                        </td>
+                        <td>
+                            <button class="action-btn edit" onclick="viewFile(${attachment.id})" title="Ko\'rish">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn edit" onclick="showUpdateImageModal(${attachment.id})" title="Yangilash">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join("")
+                : '<tr><td colspan="4" class="text-center text-muted">Ma\'lumotlar mavjud emas</td></tr>'
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById("replaceImageModal"))
+        modal.show()
+    } catch (error) {
+        console.error("Error loading replace image modal:", error)
+        showNotification("error", "Rasm almashtirish modalini yuklashda xatolik")
+    }
+}
+
+// Toggle attachment status
+async function toggleAttachmentStatus(attachmentId, newStatus) {
+    try {
+        // This would need an API endpoint to toggle status
+        showNotification("info", `Attachment ${attachmentId} holati ${newStatus ? 'faollashtirildi' : 'nofaollashtirildi'}`)
+
+        // Refresh the activation modal
+        showActivationModal()
+    } catch (error) {
+        console.error("Error toggling attachment status:", error)
+        showNotification("error", "Attachment holatini o\'zgartirishda xatolik")
+    }
+}
+
+// Show update image modal
+async function showUpdateImageModal(attachmentId) {
+    try {
+        const attachment = await apiRequest(`/api/v1/admin/attachment/${attachmentId}`)
+
+        if (!attachment) {
+            showNotification("error", "Attachment ma'lumotlari topilmadi")
+            return
+        }
+
+        // Populate update form
+        document.getElementById("update-attachment-id").value = attachment.id
+        document.getElementById("update-attachment-id-display").value = attachment.id
+        document.getElementById("update-attachment-name").value = attachment.filename || attachment.name || "N/A"
+
+        // Show current image
+        const currentImagePreview = document.getElementById("current-image-preview")
+        if (attachment.contentType && attachment.contentType.startsWith("image/")) {
+            currentImagePreview.innerHTML = `
+                <img src="${API_BASE_URL}/api/v1/attachment/${attachment.id}" 
+                     class="img-fluid rounded" 
+                     alt="${attachment.filename}"
+                     style="max-height: 200px; object-fit: contain;"
+                     onerror="this.src='/placeholder.svg?height=200&width=200'">
+            `
+        } else {
+            currentImagePreview.innerHTML = `
+                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 200px;">
+                    <div class="text-center">
+                        <i class="fas fa-file fa-3x text-muted mb-3"></i>
+                        <div class="text-muted">${attachment.filename}</div>
+                    </div>
+                </div>
+            `
+        }
+
+        // Clear previous preview
+        document.getElementById("update-file-preview").innerHTML = ""
+        document.getElementById("update-file-input").value = ""
+
+        const modal = new bootstrap.Modal(document.getElementById("updateImageModal"))
+        modal.show()
+    } catch (error) {
+        console.error("Error showing update image modal:", error)
+        showNotification("error", "Yangilash modalini ko'rsatishda xatolik")
+    }
+}
+
+// Update attachment
+async function updateAttachment() {
+    const attachmentId = document.getElementById("update-attachment-id").value
+    const fileInput = document.getElementById("update-file-input")
+    const file = fileInput.files[0]
+
+    if (!file) {
+        showNotification("warning", "Iltimos, yangi fayl tanlang")
+        return
+    }
+
+    try {
+        const formData = new FormData()
+        formData.append("file", file)
+
+        const response = await fetch(`${API_BASE_URL}/api/v1/admin/attachment/${attachmentId}`, {
+            method: "PUT",
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+            body: formData,
+        })
+
+        if (!response.ok) {
+            throw new Error("Failed to update attachment")
+        }
+
+        const result = await response.json()
+
+        showNotification("success", "Attachment muvaffaqiyatli yangilandi")
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById("updateImageModal"))
+        modal.hide()
+
+        // Refresh data
+        loadFilesData()
+        showReplaceImageModal() // Refresh the replace modal if it's open
+    } catch (error) {
+        console.error("Error updating attachment:", error)
+        showNotification("error", "Attachmentni yangilashda xatolik")
+    }
+}
+
+// Open memory management page
+function openMemoryManagement() {
+    window.location.href = "memory-management.html"
+}
+
 // Clear memory
 function clearMemory() {
     if (confirm("Xotira tozalashni xohlaysizmi? Bu amal qaytarib bo'lmaydi.")) {
@@ -446,7 +809,7 @@ function clearMemory() {
 
 // Toggle activation
 function toggleActivation() {
-    showNotification("info", "Faollashtirish/Nofaollashtirish funksiyasi ishlab chiqilmoqda")
+    showActivationModal()
 }
 
 // Update files
@@ -531,7 +894,7 @@ function hideLoading() {
 function showNotification(type, message) {
     const notification = document.createElement("div")
     notification.className = `alert alert-${type === "success" ? "success" : type === "error" ? "danger" : type === "warning" ? "warning" : "info"} alert-dismissible fade show position-fixed`
-    notification.style.cssText = "top: 20px; right: 20px; z-index: 9999; max-width: 350px; animation: slideIn 0.3s ease;"
+    notification.style.cssText = "top: 20px; right: 20px; z-index: 10000; max-width: 350px; animation: slideIn 0.3s ease;"
 
     notification.innerHTML = `
         <i class="fas fa-${type === "success" ? "check-circle" : type === "error" ? "exclamation-circle" : type === "warning" ? "exclamation-triangle" : "info-circle"} me-2"></i>
@@ -557,176 +920,5 @@ function logout() {
         setTimeout(() => {
             window.location.href = "login.html"
         }, 1000)
-    }
-}
-
-// Show all attachments
-async function showAllAttachments() {
-    try {
-        const data = await apiRequest("/api/v1/admin/attachments")
-        showAttachmentsModal("Barcha rasmlar", data || [])
-    } catch (error) {
-        console.error("Error loading all attachments:", error)
-        showNotification("error", "Barcha rasmlarni yuklashda xatolik")
-    }
-}
-
-// Show active attachments
-async function showActiveAttachments() {
-    try {
-        const data = await apiRequest("/api/v1/admin/attachments/active")
-        showAttachmentsModal("Faol rasmlar", data || [])
-    } catch (error) {
-        console.error("Error loading active attachments:", error)
-        showNotification("error", "Faol rasmlarni yuklashda xatolik")
-    }
-}
-
-// Show inactive attachments
-async function showInactiveAttachments() {
-    try {
-        const data = await apiRequest("/api/v1/admin/attachments/inactive")
-        showAttachmentsModal("Nofaol rasmlar", data || [])
-    } catch (error) {
-        console.error("Error loading inactive attachments:", error)
-        showNotification("error", "Nofaol rasmlarni yuklashda xatolik")
-    }
-}
-
-// Show unlinked attachments
-async function showUnlinkedAttachments() {
-    try {
-        // This would need a specific API endpoint for unlinked attachments
-        showNotification("info", "Bog'lanmagan rasmlar funksiyasi ishlab chiqilmoqda")
-    } catch (error) {
-        console.error("Error loading unlinked attachments:", error)
-        showNotification("error", "Bog'lanmagan rasmlarni yuklashda xatolik")
-    }
-}
-
-// Show attachments modal
-function showAttachmentsModal(title, attachments) {
-    // Create modal dynamically
-    const modalHtml = `
-    <div class="modal fade" id="attachmentsModal" tabindex="-1">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content modern-modal">
-                <div class="modal-header">
-                    <h5 class="modal-title">${title}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="table-container">
-                        <table class="modern-table">
-                            <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nomi</th>
-                                <th>Product ID</th>
-                                <th>Amallar</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            ${
-        attachments.length > 0
-            ? attachments
-                .map(
-                    (attachment) => `
-                                <tr>
-                                    <td>${attachment.id}</td>
-                                    <td class="text-truncate" style="max-width: 200px;" title="${attachment.filename || attachment.name}">${attachment.filename || attachment.name || "N/A"}</td>
-                                    <td>
-                                        ${attachment.productId ? `<span class="badge bg-primary">${attachment.productId}</span>` : '<span class="badge bg-secondary">NO-LINKED</span>'}
-                                    </td>
-                                    <td>
-                                        <button class="action-btn edit" onclick="viewFile(${attachment.id})" title="Ko'rish">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            `,
-                )
-                .join("")
-            : '<tr><td colspan="4" class="text-center text-muted">Ma\'lumotlar mavjud emas</td></tr>'
-    }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Yopish</button>
-                </div>
-            </div>
-        </div>
-    </div>
-  `
-
-    // Remove existing modal if any
-    const existingModal = document.getElementById("attachmentsModal")
-    if (existingModal) {
-        existingModal.remove()
-    }
-
-    // Add modal to body
-    document.body.insertAdjacentHTML("beforeend", modalHtml)
-
-    const modal = new bootstrap.Modal(document.getElementById("attachmentsModal"))
-    modal.show()
-}
-
-// Open memory management page
-function openMemoryManagement() {
-    window.location.href = "memory-management.html"
-}
-
-// Show activation modal
-function showActivationModal() {
-    showNotification("info", "Faollashtirish/Nofaollashtirish funksiyasi ishlab chiqilmoqda")
-}
-
-// Show replace image modal
-function showReplaceImageModal() {
-    showNotification("info", "Rasmni almashtirish funksiyasi ishlab chiqilmoqda")
-}
-
-// Load recent uploaded files (last 7 days)
-async function loadRecentUploaded() {
-    try {
-        // This would need date filtering in the API
-        const mockData = [
-            { id: 1, filename: "recent1.jpg", productId: 123 },
-            { id: 2, filename: "recent2.png", productId: null },
-        ]
-        renderFilesTable("recent-uploaded-table", mockData)
-    } catch (error) {
-        console.error("Error loading recent uploaded:", error)
-        showNotification("error", "So'nggi yuklangan fayllarni yuklashda xatolik")
-    }
-}
-
-// Load recent modified files (last 7 days)
-async function loadRecentModified() {
-    try {
-        // This would need date filtering in the API
-        const mockData = [{ id: 3, filename: "modified1.jpg", productId: 456 }]
-        renderFilesTable("recent-modified-table", mockData)
-    } catch (error) {
-        console.error("Error loading recent modified:", error)
-        showNotification("error", "So'nggi o'zgartirilgan fayllarni yuklashda xatolik")
-    }
-}
-
-// Load unlinked images
-async function loadUnlinkedImages() {
-    try {
-        // This would need a specific API endpoint
-        const mockData = [
-            { id: 4, filename: "unlinked1.jpg", productId: null },
-            { id: 5, filename: "unlinked2.png", productId: null },
-        ]
-        renderFilesTable("unlinked-images-table", mockData)
-    } catch (error) {
-        console.error("Error loading unlinked images:", error)
-        showNotification("error", "Bog'lanmagan rasmlarni yuklashda xatolik")
     }
 }
