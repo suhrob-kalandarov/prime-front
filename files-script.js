@@ -134,6 +134,16 @@ function setupEventListeners() {
     window.toggleFullscreen = toggleFullscreen
     window.logout = logout
     window.removePreview = removePreview
+    window.showAllAttachments = showAllAttachments
+    window.showActiveAttachments = showActiveAttachments
+    window.showInactiveAttachments = showInactiveAttachments
+    window.showUnlinkedAttachments = showUnlinkedAttachments
+    window.openMemoryManagement = openMemoryManagement
+    window.showActivationModal = showActivationModal
+    window.showReplaceImageModal = showReplaceImageModal
+    window.loadRecentUploaded = loadRecentUploaded
+    window.loadRecentModified = loadRecentModified
+    window.loadUnlinkedImages = loadUnlinkedImages
 }
 
 // API request with token
@@ -195,17 +205,17 @@ async function loadFilesData() {
 // Load attachment statistics
 async function loadAttachmentStats() {
     try {
-        const [total, active, inactive, deleted] = await Promise.all([
+        const [total, active, inactive, unlinked] = await Promise.all([
             apiRequest("/api/v1/admin/attachments/count"),
             apiRequest("/api/v1/admin/attachments/active-count"),
             apiRequest("/api/v1/admin/attachments/inactive-count"),
-            apiRequest("/api/v1/admin/attachments/deleted-count"),
+            apiRequest("/api/v1/admin/attachments/no-linked-with-product/count"),
         ])
 
         animateCounter("total-attachments", total || 0)
         animateCounter("active-attachments", active || 0)
         animateCounter("inactive-attachments", inactive || 0)
-        animateCounter("deleted-attachments", deleted || 0)
+        animateCounter("unlinked-attachments", unlinked || 0)
     } catch (error) {
         console.error("Error loading attachment stats:", error)
         showNotification("error", "Statistika ma'lumotlarini yuklashda xatolik")
@@ -307,11 +317,9 @@ function renderFilesTable(tableId, files) {
             (file) => `
         <tr class="fade-in">
             <td>${file.id}</td>
-            <td class="text-truncate" style="max-width: 100px;" title="${file.filename}">${file.filename}</td>
+            <td class="text-truncate" style="max-width: 100px;" title="${file.filename || file.name}">${file.filename || file.name || "N/A"}</td>
             <td>
-                <span class="status-badge ${file.active ? "active" : "inactive"}">
-                    ${file.active ? "FAOL" : "NOFAOL"}
-                </span>
+                ${file.productId ? `<span class="badge bg-primary">${file.productId}</span>` : '<span class="badge bg-secondary">NO-LINKED</span>'}
             </td>
             <td>
                 <button class="action-btn edit" onclick="viewFile(${file.id})" title="Ko'rish">
@@ -344,7 +352,7 @@ async function uploadFile() {
         const formData = new FormData()
         formData.append("file", file)
 
-        const response = await fetch(`${API_BASE_URL}/api/v1/admin/attachment/upload`, {
+        const response = await fetch(`${API_BASE_URL}/api/v1/admin/attachment`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -549,5 +557,176 @@ function logout() {
         setTimeout(() => {
             window.location.href = "login.html"
         }, 1000)
+    }
+}
+
+// Show all attachments
+async function showAllAttachments() {
+    try {
+        const data = await apiRequest("/api/v1/admin/attachments")
+        showAttachmentsModal("Barcha rasmlar", data || [])
+    } catch (error) {
+        console.error("Error loading all attachments:", error)
+        showNotification("error", "Barcha rasmlarni yuklashda xatolik")
+    }
+}
+
+// Show active attachments
+async function showActiveAttachments() {
+    try {
+        const data = await apiRequest("/api/v1/admin/attachments/active")
+        showAttachmentsModal("Faol rasmlar", data || [])
+    } catch (error) {
+        console.error("Error loading active attachments:", error)
+        showNotification("error", "Faol rasmlarni yuklashda xatolik")
+    }
+}
+
+// Show inactive attachments
+async function showInactiveAttachments() {
+    try {
+        const data = await apiRequest("/api/v1/admin/attachments/inactive")
+        showAttachmentsModal("Nofaol rasmlar", data || [])
+    } catch (error) {
+        console.error("Error loading inactive attachments:", error)
+        showNotification("error", "Nofaol rasmlarni yuklashda xatolik")
+    }
+}
+
+// Show unlinked attachments
+async function showUnlinkedAttachments() {
+    try {
+        // This would need a specific API endpoint for unlinked attachments
+        showNotification("info", "Bog'lanmagan rasmlar funksiyasi ishlab chiqilmoqda")
+    } catch (error) {
+        console.error("Error loading unlinked attachments:", error)
+        showNotification("error", "Bog'lanmagan rasmlarni yuklashda xatolik")
+    }
+}
+
+// Show attachments modal
+function showAttachmentsModal(title, attachments) {
+    // Create modal dynamically
+    const modalHtml = `
+    <div class="modal fade" id="attachmentsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content modern-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title">${title}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-container">
+                        <table class="modern-table">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nomi</th>
+                                <th>Product ID</th>
+                                <th>Amallar</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            ${
+        attachments.length > 0
+            ? attachments
+                .map(
+                    (attachment) => `
+                                <tr>
+                                    <td>${attachment.id}</td>
+                                    <td class="text-truncate" style="max-width: 200px;" title="${attachment.filename || attachment.name}">${attachment.filename || attachment.name || "N/A"}</td>
+                                    <td>
+                                        ${attachment.productId ? `<span class="badge bg-primary">${attachment.productId}</span>` : '<span class="badge bg-secondary">NO-LINKED</span>'}
+                                    </td>
+                                    <td>
+                                        <button class="action-btn edit" onclick="viewFile(${attachment.id})" title="Ko'rish">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `,
+                )
+                .join("")
+            : '<tr><td colspan="4" class="text-center text-muted">Ma\'lumotlar mavjud emas</td></tr>'
+    }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Yopish</button>
+                </div>
+            </div>
+        </div>
+    </div>
+  `
+
+    // Remove existing modal if any
+    const existingModal = document.getElementById("attachmentsModal")
+    if (existingModal) {
+        existingModal.remove()
+    }
+
+    // Add modal to body
+    document.body.insertAdjacentHTML("beforeend", modalHtml)
+
+    const modal = new bootstrap.Modal(document.getElementById("attachmentsModal"))
+    modal.show()
+}
+
+// Open memory management page
+function openMemoryManagement() {
+    window.location.href = "memory-management.html"
+}
+
+// Show activation modal
+function showActivationModal() {
+    showNotification("info", "Faollashtirish/Nofaollashtirish funksiyasi ishlab chiqilmoqda")
+}
+
+// Show replace image modal
+function showReplaceImageModal() {
+    showNotification("info", "Rasmni almashtirish funksiyasi ishlab chiqilmoqda")
+}
+
+// Load recent uploaded files (last 7 days)
+async function loadRecentUploaded() {
+    try {
+        // This would need date filtering in the API
+        const mockData = [
+            { id: 1, filename: "recent1.jpg", productId: 123 },
+            { id: 2, filename: "recent2.png", productId: null },
+        ]
+        renderFilesTable("recent-uploaded-table", mockData)
+    } catch (error) {
+        console.error("Error loading recent uploaded:", error)
+        showNotification("error", "So'nggi yuklangan fayllarni yuklashda xatolik")
+    }
+}
+
+// Load recent modified files (last 7 days)
+async function loadRecentModified() {
+    try {
+        // This would need date filtering in the API
+        const mockData = [{ id: 3, filename: "modified1.jpg", productId: 456 }]
+        renderFilesTable("recent-modified-table", mockData)
+    } catch (error) {
+        console.error("Error loading recent modified:", error)
+        showNotification("error", "So'nggi o'zgartirilgan fayllarni yuklashda xatolik")
+    }
+}
+
+// Load unlinked images
+async function loadUnlinkedImages() {
+    try {
+        // This would need a specific API endpoint
+        const mockData = [
+            { id: 4, filename: "unlinked1.jpg", productId: null },
+            { id: 5, filename: "unlinked2.png", productId: null },
+        ]
+        renderFilesTable("unlinked-images-table", mockData)
+    } catch (error) {
+        console.error("Error loading unlinked images:", error)
+        showNotification("error", "Bog'lanmagan rasmlarni yuklashda xatolik")
     }
 }

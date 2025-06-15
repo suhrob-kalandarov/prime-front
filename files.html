@@ -109,7 +109,7 @@
     <div class="tab-content active">
         <!-- Stats Grid -->
         <div class="stats-grid">
-            <div class="stats-card primary">
+            <div class="stats-card primary" onclick="showAllAttachments()" style="cursor: pointer;">
                 <div class="stats-icon">
                     <i class="fas fa-images"></i>
                 </div>
@@ -121,16 +121,9 @@
                         <span>+5%</span>
                     </div>
                 </div>
-                <div class="stats-chart">
-                    <div class="chart-bar" style="height: 50%"></div>
-                    <div class="chart-bar" style="height: 70%"></div>
-                    <div class="chart-bar" style="height: 60%"></div>
-                    <div class="chart-bar" style="height: 80%"></div>
-                    <div class="chart-bar" style="height: 90%"></div>
-                </div>
             </div>
 
-            <div class="stats-card success">
+            <div class="stats-card success" onclick="showActiveAttachments()" style="cursor: pointer;">
                 <div class="stats-icon">
                     <i class="fas fa-check-circle"></i>
                 </div>
@@ -142,16 +135,9 @@
                         <span>+8%</span>
                     </div>
                 </div>
-                <div class="stats-chart">
-                    <div class="chart-bar" style="height: 70%"></div>
-                    <div class="chart-bar" style="height: 50%"></div>
-                    <div class="chart-bar" style="height: 90%"></div>
-                    <div class="chart-bar" style="height: 60%"></div>
-                    <div class="chart-bar" style="height: 80%"></div>
-                </div>
             </div>
 
-            <div class="stats-card warning">
+            <div class="stats-card warning" onclick="showInactiveAttachments()" style="cursor: pointer;">
                 <div class="stats-icon">
                     <i class="fas fa-pause-circle"></i>
                 </div>
@@ -163,33 +149,19 @@
                         <span>-2%</span>
                     </div>
                 </div>
-                <div class="stats-chart">
-                    <div class="chart-bar" style="height: 80%"></div>
-                    <div class="chart-bar" style="height: 60%"></div>
-                    <div class="chart-bar" style="height: 70%"></div>
-                    <div class="chart-bar" style="height: 40%"></div>
-                    <div class="chart-bar" style="height: 50%"></div>
-                </div>
             </div>
 
-            <div class="stats-card info">
+            <div class="stats-card info" onclick="showUnlinkedAttachments()" style="cursor: pointer;">
                 <div class="stats-icon">
-                    <i class="fas fa-trash-alt"></i>
+                    <i class="fas fa-unlink"></i>
                 </div>
                 <div class="stats-content">
-                    <div class="stats-number" id="deleted-attachments">0</div>
-                    <div class="stats-label">O'chirilgan rasmlar</div>
+                    <div class="stats-number" id="unlinked-attachments">0</div>
+                    <div class="stats-label">Bog'lanmagan rasmlar</div>
                     <div class="stats-change negative">
                         <i class="fas fa-arrow-down"></i>
                         <span>-1%</span>
                     </div>
-                </div>
-                <div class="stats-chart">
-                    <div class="chart-bar" style="height: 30%"></div>
-                    <div class="chart-bar" style="height: 20%"></div>
-                    <div class="chart-bar" style="height: 40%"></div>
-                    <div class="chart-bar" style="height: 25%"></div>
-                    <div class="chart-bar" style="height: 35%"></div>
                 </div>
             </div>
         </div>
@@ -201,30 +173,30 @@
                     <i class="fas fa-plus"></i>
                     <span>Fayl qo'shish</span>
                 </button>
-                <button class="btn btn-warning d-flex align-items-center gap-2" onclick="clearMemory()">
-                    <i class="fas fa-broom"></i>
-                    <span>Xotira tozalash</span>
+                <button class="btn btn-warning d-flex align-items-center gap-2" onclick="openMemoryManagement()">
+                    <i class="fas fa-server"></i>
+                    <span>Xotira boshqaruvi</span>
                 </button>
-                <button class="btn btn-info d-flex align-items-center gap-2" onclick="toggleActivation()">
+                <button class="btn btn-info d-flex align-items-center gap-2" onclick="showActivationModal()">
                     <i class="fas fa-toggle-on"></i>
                     <span>Faollashtirish/Nofaollashtirish</span>
                 </button>
-                <button class="btn btn-secondary d-flex align-items-center gap-2" onclick="updateFiles()">
-                    <i class="fas fa-sync-alt"></i>
-                    <span>Yangilash</span>
+                <button class="btn btn-secondary d-flex align-items-center gap-2" onclick="showReplaceImageModal()">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Rasmni almashtirish</span>
                 </button>
             </div>
         </div>
 
         <!-- Files Grid -->
         <div class="row">
-            <!-- Today's Files -->
+            <!-- Recently Uploaded -->
             <div class="col-lg-4 mb-4">
                 <div class="table-card">
                     <div class="card-header">
-                        <h3>Bugun qo'shilgan rasmlar</h3>
+                        <h3>So'nggi yuklangan (7 kun)</h3>
                         <div class="card-actions">
-                            <button class="card-action" onclick="loadTodayFiles()">
+                            <button class="card-action" onclick="loadRecentUploaded()">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
                         </div>
@@ -236,11 +208,11 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Nomi</th>
-                                    <th>Holati</th>
+                                    <th>Product ID</th>
                                     <th>Amallar</th>
                                 </tr>
                                 </thead>
-                                <tbody id="today-files-table">
+                                <tbody id="recent-uploaded-table">
                                 <tr>
                                     <td colspan="4" class="text-center text-muted">Yuklanmoqda...</td>
                                 </tr>
@@ -251,13 +223,13 @@
                 </div>
             </div>
 
-            <!-- This Week's Files -->
+            <!-- Recently Modified -->
             <div class="col-lg-4 mb-4">
                 <div class="table-card">
                     <div class="card-header">
-                        <h3>Bu hafta qo'shilgan rasmlar</h3>
+                        <h3>So'nggi o'zgartirilgan (7 kun)</h3>
                         <div class="card-actions">
-                            <button class="card-action" onclick="loadWeekFiles()">
+                            <button class="card-action" onclick="loadRecentModified()">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
                         </div>
@@ -269,11 +241,11 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Nomi</th>
-                                    <th>Holati</th>
+                                    <th>Product ID</th>
                                     <th>Amallar</th>
                                 </tr>
                                 </thead>
-                                <tbody id="week-files-table">
+                                <tbody id="recent-modified-table">
                                 <tr>
                                     <td colspan="4" class="text-center text-muted">Yuklanmoqda...</td>
                                 </tr>
@@ -284,13 +256,13 @@
                 </div>
             </div>
 
-            <!-- Last Month's Files -->
+            <!-- Unlinked Images -->
             <div class="col-lg-4 mb-4">
                 <div class="table-card">
                     <div class="card-header">
-                        <h3>Oxirgi oy qo'shilgan rasmlar</h3>
+                        <h3>Bog'lanmagan rasmlar</h3>
                         <div class="card-actions">
-                            <button class="card-action" onclick="loadMonthFiles()">
+                            <button class="card-action" onclick="loadUnlinkedImages()">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
                         </div>
@@ -302,11 +274,11 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Nomi</th>
-                                    <th>Holati</th>
+                                    <th>Product ID</th>
                                     <th>Amallar</th>
                                 </tr>
                                 </thead>
-                                <tbody id="month-files-table">
+                                <tbody id="unlinked-images-table">
                                 <tr>
                                     <td colspan="4" class="text-center text-muted">Yuklanmoqda...</td>
                                 </tr>
