@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fayllar - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="admin-styles.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">
+            <i class="fas fa-crown"></i>
+        </div>
+        <h4 class="logo-text">Just Admin</h4>
+        <p class="logo-subtitle">Control Panel</p>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="admin.html" class="nav-link">
+            <div class="nav-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <span>Dashboard</span>
+            <div class="nav-indicator"></div>
+        </a>
+        <a href="categories.html" class="nav-link">
+            <div class="nav-icon">
+                <i class="fas fa-tags"></i>
+            </div>
+            <span>Kategoriyalar</span>
+            <div class="nav-indicator"></div>
+        </a>
+        <a href="products.html" class="nav-link">
+            <div class="nav-icon">
+                <i class="fas fa-box-open"></i>
+            </div>
+            <span>Mahsulotlar</span>
+            <div class="nav-indicator"></div>
+        </a>
+        <a href="users.html" class="nav-link">
+            <div class="nav-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <span>Foydalanuvchilar</span>
+            <div class="nav-indicator"></div>
+        </a>
+        <a href="files.html" class="nav-link active">
+            <div class="nav-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <span>Fayllar</span>
+            <div class="nav-indicator"></div>
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-profile">
+            <div class="user-avatar">
+                <i class="fas fa-user-crown"></i>
+            </div>
+            <div class="user-info">
+                <div class="user-name">Admin</div>
+                <div class="user-role">Super Admin</div>
+            </div>
+        </div>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Chiqish</span>
+        </button>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-left">
+            <button class="sidebar-toggle" id="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="breadcrumb">
+                <h1>Fayllar</h1>
+                <p>Fayllarni boshqarish</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="header-actions">
+                <button class="header-btn" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="header-btn" onclick="toggleFullscreen()">
+                    <i class="fas fa-expand"></i>
+                </button>
+                <a href="index.html" class="header-btn">
+                    <i class="fas fa-external-link-alt"></i>
+                    <span>Saytga o'tish</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Files Content -->
+    <div class="tab-content active">
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stats-card primary">
+                <div class="stats-icon">
+                    <i class="fas fa-images"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number" id="total-attachments">0</div>
+                    <div class="stats-label">Jami rasmlar</div>
+                    <div class="stats-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+5%</span>
+                    </div>
+                </div>
+                <div class="stats-chart">
+                    <div class="chart-bar" style="height: 50%"></div>
+                    <div class="chart-bar" style="height: 70%"></div>
+                    <div class="chart-bar" style="height: 60%"></div>
+                    <div class="chart-bar" style="height: 80%"></div>
+                    <div class="chart-bar" style="height: 90%"></div>
+                </div>
+            </div>
+
+            <div class="stats-card success">
+                <div class="stats-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number" id="active-attachments">0</div>
+                    <div class="stats-label">Faol rasmlar</div>
+                    <div class="stats-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+8%</span>
+                    </div>
+                </div>
+                <div class="stats-chart">
+                    <div class="chart-bar" style="height: 70%"></div>
+                    <div class="chart-bar" style="height: 50%"></div>
+                    <div class="chart-bar" style="height: 90%"></div>
+                    <div class="chart-bar" style="height: 60%"></div>
+                    <div class="chart-bar" style="height: 80%"></div>
+                </div>
+            </div>
+
+            <div class="stats-card warning">
+                <div class="stats-icon">
+                    <i class="fas fa-pause-circle"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number" id="inactive-attachments">0</div>
+                    <div class="stats-label">Nofaol rasmlar</div>
+                    <div class="stats-change negative">
+                        <i class="fas fa-arrow-down"></i>
+                        <span>-2%</span>
+                    </div>
+                </div>
+                <div class="stats-chart">
+                    <div class="chart-bar" style="height: 80%"></div>
+                    <div class="chart-bar" style="height: 60%"></div>
+                    <div class="chart-bar" style="height: 70%"></div>
+                    <div class="chart-bar" style="height: 40%"></div>
+                    <div class="chart-bar" style="height: 50%"></div>
+                </div>
+            </div>
+
+            <div class="stats-card info">
+                <div class="stats-icon">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number" id="deleted-attachments">0</div>
+                    <div class="stats-label">O'chirilgan rasmlar</div>
+                    <div class="stats-change negative">
+                        <i class="fas fa-arrow-down"></i>
+                        <span>-1%</span>
+                    </div>
+                </div>
+                <div class="stats-chart">
+                    <div class="chart-bar" style="height: 30%"></div>
+                    <div class="chart-bar" style="height: 20%"></div>
+                    <div class="chart-bar" style="height: 40%"></div>
+                    <div class="chart-bar" style="height: 25%"></div>
+                    <div class="chart-bar" style="height: 35%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card-header mb-4" style="background: white; border-radius: var(--border-radius); box-shadow: var(--box-shadow);">
+            <div class="d-flex gap-3 align-items-center justify-content-center p-3">
+                <button class="btn btn-primary d-flex align-items-center gap-2" onclick="showUploadModal()">
+                    <i class="fas fa-plus"></i>
+                    <span>Fayl qo'shish</span>
+                </button>
+                <button class="btn btn-warning d-flex align-items-center gap-2" onclick="clearMemory()">
+                    <i class="fas fa-broom"></i>
+                    <span>Xotira tozalash</span>
+                </button>
+                <button class="btn btn-info d-flex align-items-center gap-2" onclick="toggleActivation()">
+                    <i class="fas fa-toggle-on"></i>
+                    <span>Faollashtirish/Nofaollashtirish</span>
+                </button>
+                <button class="btn btn-secondary d-flex align-items-center gap-2" onclick="updateFiles()">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Yangilash</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Files Grid -->
+        <div class="row">
+            <!-- Today's Files -->
+            <div class="col-lg-4 mb-4">
+                <div class="table-card">
+                    <div class="card-header">
+                        <h3>Bugun qo'shilgan rasmlar</h3>
+                        <div class="card-actions">
+                            <button class="card-action" onclick="loadTodayFiles()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="modern-table">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nomi</th>
+                                    <th>Holati</th>
+                                    <th>Amallar</th>
+                                </tr>
+                                </thead>
+                                <tbody id="today-files-table">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">Yuklanmoqda...</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- This Week's Files -->
+            <div class="col-lg-4 mb-4">
+                <div class="table-card">
+                    <div class="card-header">
+                        <h3>Bu hafta qo'shilgan rasmlar</h3>
+                        <div class="card-actions">
+                            <button class="card-action" onclick="loadWeekFiles()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="modern-table">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nomi</th>
+                                    <th>Holati</th>
+                                    <th>Amallar</th>
+                                </tr>
+                                </thead>
+                                <tbody id="week-files-table">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">Yuklanmoqda...</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Last Month's Files -->
+            <div class="col-lg-4 mb-4">
+                <div class="table-card">
+                    <div class="card-header">
+                        <h3>Oxirgi oy qo'shilgan rasmlar</h3>
+                        <div class="card-actions">
+                            <button class="card-action" onclick="loadMonthFiles()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="modern-table">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nomi</th>
+                                    <th>Holati</th>
+                                    <th>Amallar</th>
+                                </tr>
+                                </thead>
+                                <tbody id="month-files-table">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">Yuklanmoqda...</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Fayl yuklash</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="upload-form" class="modern-form">
+                    <div class="form-group">
+                        <label class="form-label">Faylni tanlang</label>
+                        <div class="file-upload-area" id="file-upload-area">
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div class="upload-text">
+                                <p>Fayl yuklash uchun bosing yoki shu yerga tashlang</p>
+                                <span>PNG, JPG, JPEG, PDF, DOC (Max: 10MB)</span>
+                            </div>
+                            <input type="file" id="file-input" hidden>
+                        </div>
+                        <div class="uploaded-preview" id="file-preview"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-primary" onclick="uploadFile()">
+                    <i class="fas fa-upload"></i>
+                    <span>Yuklash</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View File Modal -->
+<div class="modal fade" id="viewFileModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Fayl ma'lumotlari</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="text-center">
+                            <div id="file-preview-container" class="mb-3">
+                                <!-- File preview will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="file-details">
+                            <h6 class="mb-3">Fayl ma'lumotlari</h6>
+                            <table class="table table-borderless">
+                                <tbody>
+                                <tr>
+                                    <td><strong>ID:</strong></td>
+                                    <td id="file-detail-id">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Nomi:</strong></td>
+                                    <td id="file-detail-name">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Content Type:</strong></td>
+                                    <td id="file-detail-content-type">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>URL:</strong></td>
+                                    <td id="file-detail-url" class="text-break">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Holati:</strong></td>
+                                    <td id="file-detail-status">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Yaratilgan:</strong></td>
+                                    <td id="file-detail-created-at">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Yaratuvchi:</strong></td>
+                                    <td id="file-detail-created-by">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Yangilangan:</strong></td>
+                                    <td id="file-detail-updated-at">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Yangilovchi:</strong></td>
+                                    <td id="file-detail-updated-by">-</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Yopish</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="files-script.js"></script>
+</body>
+</html>
