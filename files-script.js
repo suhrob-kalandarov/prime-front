@@ -3,9 +3,9 @@ const API_BASE_URL = "http://localhost:8080"
 
 // Global variables
 const allFiles = []
-let todayFiles = []
-let weekFiles = []
-let monthFiles = []
+const todayFiles = []
+const weekFiles = []
+const monthFiles = []
 const bootstrap = window.bootstrap
 
 // Initialize files panel
@@ -152,7 +152,7 @@ function handleFilePreview(file, preview) {
 // Remove preview
 function removePreview(button) {
     button.parentElement.remove()
-    const parentForm = button.closest('form')
+    const parentForm = button.closest("form")
     if (parentForm) {
         const fileInput = parentForm.querySelector('input[type="file"]')
         if (fileInput) {
@@ -238,12 +238,7 @@ async function loadFilesData() {
     try {
         showLoading()
 
-        await Promise.all([
-            loadAttachmentStats(),
-            loadRecentUploaded(),
-            loadRecentModified(),
-            loadUnlinkedImages()
-        ])
+        await Promise.all([loadAttachmentStats(), loadRecentUploaded(), loadRecentModified(), loadUnlinkedImages()])
 
         hideLoading()
     } catch (error) {
@@ -257,9 +252,9 @@ async function loadFilesData() {
 async function loadAttachmentStats() {
     try {
         const [total, active, inactive, unlinked] = await Promise.all([
-            apiRequest("/api/v1/admin/attachments").then(data => data?.length || 0),
-            apiRequest("/api/v1/admin/attachments/active").then(data => data?.length || 0),
-            apiRequest("/api/v1/admin/attachments/inactive").then(data => data?.length || 0),
+            apiRequest("/api/v1/admin/attachments").then((data) => data?.length || 0),
+            apiRequest("/api/v1/admin/attachments/active").then((data) => data?.length || 0),
+            apiRequest("/api/v1/admin/attachments/inactive").then((data) => data?.length || 0),
             apiRequest("/api/v1/admin/attachments/no-linked-with-product/count"),
         ])
 
@@ -292,9 +287,7 @@ async function loadRecentUploaded() {
 async function loadRecentModified() {
     try {
         // Mock data for recent modified - in real implementation, you would filter by date
-        const mockData = [
-            { id: 3, filename: "modified1.jpg", productId: 456 }
-        ]
+        const mockData = [{ id: 3, filename: "modified1.jpg", productId: 456 }]
         renderFilesTable("recent-modified-table", mockData)
     } catch (error) {
         console.error("Error loading recent modified:", error)
@@ -453,7 +446,26 @@ async function viewFile(fileId) {
             return
         }
 
-        // Populate modal with file details
+        // Avval barcha modallarni yopamiz va tozalaymiz
+        const existingModals = document.querySelectorAll('.modal.show')
+        existingModals.forEach(modal => {
+            const modalInstance = bootstrap.Modal.getInstance(modal)
+            if (modalInstance) {
+                modalInstance.hide()
+            }
+        })
+
+        // Backdrop larni tozalaymiz
+        setTimeout(() => {
+            const backdrops = document.querySelectorAll('.modal-backdrop')
+            backdrops.forEach(backdrop => backdrop.remove())
+
+            document.body.classList.remove('modal-open')
+            document.body.style.overflow = ''
+            document.body.style.paddingRight = ''
+        }, 200)
+
+        // Ma'lumotlarni to'ldiramiz
         document.getElementById("file-detail-id").textContent = file.id || "-"
         document.getElementById("file-detail-name").textContent = file.filename || "-"
         document.getElementById("file-detail-content-type").textContent = file.contentType || "-"
@@ -468,7 +480,7 @@ async function viewFile(fileId) {
         document.getElementById("file-detail-updated-at").textContent = file.updatedAt || "-"
         document.getElementById("file-detail-updated-by").textContent = file.updatedBy || "-"
 
-        // Show file preview
+        // Fayl preview ni ko'rsatamiz
         const previewContainer = document.getElementById("file-preview-container")
         if (file.contentType && file.contentType.startsWith("image/")) {
             previewContainer.innerHTML = `
@@ -489,8 +501,16 @@ async function viewFile(fileId) {
             `
         }
 
-        const modal = new bootstrap.Modal(document.getElementById("viewFileModal"))
-        modal.show()
+        // Yangi modal ni ko'rsatamiz
+        setTimeout(() => {
+            const modal = new bootstrap.Modal(document.getElementById("viewFileModal"), {
+                backdrop: true,
+                keyboard: true,
+                focus: true
+            })
+            modal.show()
+        }, 300)
+
     } catch (error) {
         console.error("Error viewing file:", error)
         showNotification("error", "Fayl ma'lumotlarini yuklashda xatolik")
@@ -541,16 +561,40 @@ async function showUnlinkedAttachments() {
     }
 }
 
-// Show attachments modal
+// Show attachments modal funksiyasini to'liq o'zgartiramiz
 function showAttachmentsModal(title, attachments) {
-    // Create modal dynamically
+    // Avval barcha ochiq modallarni yopamiz
+    const existingModals = document.querySelectorAll('.modal.show')
+    existingModals.forEach(modal => {
+        const modalInstance = bootstrap.Modal.getInstance(modal)
+        if (modalInstance) {
+            modalInstance.hide()
+        }
+    })
+
+    // Eski modallarni o'chiramiz
+    const existingModal = document.getElementById("attachmentsModal")
+    if (existingModal) {
+        existingModal.remove()
+    }
+
+    // Backdrop larni tozalaymiz
+    const backdrops = document.querySelectorAll('.modal-backdrop')
+    backdrops.forEach(backdrop => backdrop.remove())
+
+    // Body dan modal classlarni olib tashlaymiz
+    document.body.classList.remove('modal-open')
+    document.body.style.overflow = ''
+    document.body.style.paddingRight = ''
+
+    // Yangi modal yaratamiz
     const modalHtml = `
-    <div class="modal fade" id="attachmentsModal" tabindex="-1" style="z-index: 1050;">
+    <div class="modal fade" id="attachmentsModal" tabindex="-1" data-bs-backdrop="true" data-bs-keyboard="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content modern-modal">
                 <div class="modal-header">
                     <h5 class="modal-title">${title}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="table-container">
@@ -576,7 +620,7 @@ function showAttachmentsModal(title, attachments) {
                                         ${attachment.productId ? `<span class="badge bg-primary">${attachment.productId}</span>` : '<span class="badge bg-secondary">NO-LINKED</span>'}
                                     </td>
                                     <td>
-                                        <button class="action-btn edit" onclick="viewFile(${attachment.id})" title="Ko\'rish">
+                                        <button class="action-btn edit" onclick="viewFileFromModal(${attachment.id})" title="Ko\'rish">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                     </td>
@@ -598,29 +642,50 @@ function showAttachmentsModal(title, attachments) {
     </div>
   `
 
-    // Remove existing modal if any
-    const existingModal = document.getElementById("attachmentsModal")
-    if (existingModal) {
-        existingModal.remove()
-    }
-
-    // Add modal to body
+    // Modal ni body ga qo'shamiz
     document.body.insertAdjacentHTML("beforeend", modalHtml)
 
-    const modal = new bootstrap.Modal(document.getElementById("attachmentsModal"))
-    modal.show()
+    // Modal ni ko'rsatamiz
+    setTimeout(() => {
+        const modal = new bootstrap.Modal(document.getElementById("attachmentsModal"), {
+            backdrop: true,
+            keyboard: true,
+            focus: true
+        })
+        modal.show()
+    }, 100)
 }
 
 // Show activation modal
 async function showActivationModal() {
     try {
+        // Avval barcha modallarni yopamiz
+        const existingModals = document.querySelectorAll('.modal.show')
+        existingModals.forEach(modal => {
+            const modalInstance = bootstrap.Modal.getInstance(modal)
+            if (modalInstance) {
+                modalInstance.hide()
+            }
+        })
+
+        // Backdrop larni tozalaymiz
+        const backdrops = document.querySelectorAll('.modal-backdrop')
+        backdrops.forEach(backdrop => backdrop.remove())
+
+        document.body.classList.remove('modal-open')
+        document.body.style.overflow = ''
+        document.body.style.paddingRight = ''
+
         const data = await apiRequest("/api/v1/admin/attachments")
 
-        // Populate activation table
+        // Activation table ni to'ldiramiz
         const tbody = document.getElementById("activation-table")
         if (tbody && data) {
-            tbody.innerHTML = data.length > 0
-                ? data.map(attachment => `
+            tbody.innerHTML =
+                data.length > 0
+                    ? data
+                        .map(
+                            (attachment) => `
                     <tr>
                         <td>${attachment.id}</td>
                         <td class="text-truncate" style="max-width: 200px;" title="${attachment.filename || attachment.name}">${attachment.filename || attachment.name || "N/A"}</td>
@@ -633,20 +698,29 @@ async function showActivationModal() {
                             </span>
                         </td>
                         <td>
-                            <button class="action-btn edit" onclick="viewFile(${attachment.id})" title="Ko\'rish">
+                            <button class="action-btn edit" onclick="viewFileFromActivationModal(${attachment.id})" title="Ko\'rish">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="action-btn ${attachment.active ? 'delete' : 'edit'}" onclick="toggleAttachmentStatus(${attachment.id}, ${!attachment.active})" title="${attachment.active ? 'Nofaollashtirish' : 'Faollashtirish'}">
-                                <i class="fas fa-${attachment.active ? 'pause' : 'play'}"></i>
+                            <button class="action-btn ${attachment.active ? "delete" : "edit"}" onclick="toggleAttachmentStatus(${attachment.id}, ${!attachment.active})" title="${attachment.active ? "Nofaollashtirish" : "Faollashtirish"}">
+                                <i class="fas fa-${attachment.active ? "pause" : "play"}"></i>
                             </button>
                         </td>
                     </tr>
-                `).join("")
-                : '<tr><td colspan="5" class="text-center text-muted">Ma\'lumotlar mavjud emas</td></tr>'
+                `,
+                        )
+                        .join("")
+                    : '<tr><td colspan="5" class="text-center text-muted">Ma\'lumotlar mavjud emas</td></tr>'
         }
 
-        const modal = new bootstrap.Modal(document.getElementById("activationModal"))
-        modal.show()
+        setTimeout(() => {
+            const modal = new bootstrap.Modal(document.getElementById("activationModal"), {
+                backdrop: true,
+                keyboard: true,
+                focus: true
+            })
+            modal.show()
+        }, 200)
+
     } catch (error) {
         console.error("Error loading activation modal:", error)
         showNotification("error", "Faollashtirish modalini yuklashda xatolik")
@@ -656,13 +730,33 @@ async function showActivationModal() {
 // Show replace image modal
 async function showReplaceImageModal() {
     try {
+        // Avval barcha modallarni yopamiz
+        const existingModals = document.querySelectorAll('.modal.show')
+        existingModals.forEach(modal => {
+            const modalInstance = bootstrap.Modal.getInstance(modal)
+            if (modalInstance) {
+                modalInstance.hide()
+            }
+        })
+
+        // Backdrop larni tozalaymiz
+        const backdrops = document.querySelectorAll('.modal-backdrop')
+        backdrops.forEach(backdrop => backdrop.remove())
+
+        document.body.classList.remove('modal-open')
+        document.body.style.overflow = ''
+        document.body.style.paddingRight = ''
+
         const data = await apiRequest("/api/v1/admin/attachments/active")
 
-        // Populate replace image table
+        // Replace image table ni to'ldiramiz
         const tbody = document.getElementById("replace-image-table")
         if (tbody && data) {
-            tbody.innerHTML = data.length > 0
-                ? data.map(attachment => `
+            tbody.innerHTML =
+                data.length > 0
+                    ? data
+                        .map(
+                            (attachment) => `
                     <tr>
                         <td>${attachment.id}</td>
                         <td class="text-truncate" style="max-width: 200px;" title="${attachment.filename || attachment.name}">${attachment.filename || attachment.name || "N/A"}</td>
@@ -670,20 +764,29 @@ async function showReplaceImageModal() {
                             ${attachment.productId ? `<span class="badge bg-primary">${attachment.productId}</span>` : '<span class="badge bg-secondary">NO-LINKED</span>'}
                         </td>
                         <td>
-                            <button class="action-btn edit" onclick="viewFile(${attachment.id})" title="Ko\'rish">
+                            <button class="action-btn edit" onclick="viewFileFromReplaceModal(${attachment.id})" title="Ko\'rish">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="action-btn edit" onclick="showUpdateImageModal(${attachment.id})" title="Yangilash">
+                            <button class="action-btn edit" onclick="showUpdateImageModalFromReplace(${attachment.id})" title="Yangilash">
                                 <i class="fas fa-edit"></i>
                             </button>
                         </td>
                     </tr>
-                `).join("")
-                : '<tr><td colspan="4" class="text-center text-muted">Ma\'lumotlar mavjud emas</td></tr>'
+                `,
+                        )
+                        .join("")
+                    : '<tr><td colspan="4" class="text-center text-muted">Ma\'lumotlar mavjud emas</td></tr>'
         }
 
-        const modal = new bootstrap.Modal(document.getElementById("replaceImageModal"))
-        modal.show()
+        setTimeout(() => {
+            const modal = new bootstrap.Modal(document.getElementById("replaceImageModal"), {
+                backdrop: true,
+                keyboard: true,
+                focus: true
+            })
+            modal.show()
+        }, 200)
+
     } catch (error) {
         console.error("Error loading replace image modal:", error)
         showNotification("error", "Rasm almashtirish modalini yuklashda xatolik")
@@ -694,13 +797,13 @@ async function showReplaceImageModal() {
 async function toggleAttachmentStatus(attachmentId, newStatus) {
     try {
         // This would need an API endpoint to toggle status
-        showNotification("info", `Attachment ${attachmentId} holati ${newStatus ? 'faollashtirildi' : 'nofaollashtirildi'}`)
+        showNotification("info", `Attachment ${attachmentId} holati ${newStatus ? "faollashtirildi" : "nofaollashtirildi"}`)
 
         // Refresh the activation modal
         showActivationModal()
     } catch (error) {
         console.error("Error toggling attachment status:", error)
-        showNotification("error", "Attachment holatini o\'zgartirishda xatolik")
+        showNotification("error", "Attachment holatini o'zgartirishda xatolik")
     }
 }
 
@@ -816,6 +919,86 @@ function toggleActivation() {
 function updateFiles() {
     loadFilesData()
     showNotification("success", "Fayllar ma'lumotlari yangilandi")
+}
+
+// Yangi funksiya - modal ichidan file ko'rish uchun
+window.viewFileFromModal = async function(fileId) {
+    try {
+        // Avval attachments modalini yopamiz
+        const attachmentsModal = bootstrap.Modal.getInstance(document.getElementById("attachmentsModal"))
+        if (attachmentsModal) {
+            attachmentsModal.hide()
+        }
+
+        // Biroz kutamiz
+        setTimeout(async () => {
+            await viewFile(fileId)
+        }, 300)
+
+    } catch (error) {
+        console.error("Error viewing file from modal:", error)
+        showNotification("error", "Fayl ma'lumotlarini yuklashda xatolik")
+    }
+}
+
+// Activation modal dan file ko'rish uchun yangi funksiya
+window.viewFileFromActivationModal = async function(fileId) {
+    try {
+        // Avval activation modalini yopamiz
+        const activationModal = bootstrap.Modal.getInstance(document.getElementById("activationModal"))
+        if (activationModal) {
+            activationModal.hide()
+        }
+
+        // Biroz kutamiz
+        setTimeout(async () => {
+            await viewFile(fileId)
+        }, 300)
+
+    } catch (error) {
+        console.error("Error viewing file from activation modal:", error)
+        showNotification("error", "Fayl ma'lumotlarini yuklashda xatolik")
+    }
+}
+
+// Replace modal dan file ko'rish uchun yangi funksiya
+window.viewFileFromReplaceModal = async function(fileId) {
+    try {
+        // Avval replace modalini yopamiz
+        const replaceModal = bootstrap.Modal.getInstance(document.getElementById("replaceImageModal"))
+        if (replaceModal) {
+            replaceModal.hide()
+        }
+
+        // Biroz kutamiz
+        setTimeout(async () => {
+            await viewFile(fileId)
+        }, 300)
+
+    } catch (error) {
+        console.error("Error viewing file from replace modal:", error)
+        showNotification("error", "Fayl ma'lumotlarini yuklashda xatolik")
+    }
+}
+
+// Replace modal dan update modal ochish uchun yangi funksiya
+window.showUpdateImageModalFromReplace = async function(attachmentId) {
+    try {
+        // Avval replace modalini yopamiz
+        const replaceModal = bootstrap.Modal.getInstance(document.getElementById("replaceImageModal"))
+        if (replaceModal) {
+            replaceModal.hide()
+        }
+
+        // Biroz kutamiz
+        setTimeout(async () => {
+            await showUpdateImageModal(attachmentId)
+        }, 300)
+
+    } catch (error) {
+        console.error("Error showing update modal from replace:", error)
+        showNotification("error", "Yangilash modalini ko'rsatishda xatolik")
+    }
 }
 
 // Refresh data
