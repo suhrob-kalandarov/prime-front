@@ -216,7 +216,6 @@
                         <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Rasm</th>
                             <th>Nomi</th>
                             <th>Holati</th>
                             <th>Yaratilgan</th>
@@ -225,7 +224,7 @@
                         </thead>
                         <tbody id="categories-table">
                         <tr>
-                            <td colspan="6" class="text-center text-muted">Yuklanmoqda...</td>
+                            <td colspan="5" class="text-center text-muted">Yuklanmoqda...</td>
                         </tr>
                         </tbody>
                     </table>
@@ -253,10 +252,26 @@
                                 <input type="text" class="form-control" id="category-name" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Rasm</label>
-                                <select class="form-select" id="category-attachment">
-                                    <option value="">Rasmni tanlang</option>
-                                </select>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="enable-image-upload">
+                                    <label class="form-check-label" for="enable-image-upload">
+                                        Rasm qo'shish
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group" id="image-upload-section" style="display: none;">
+                                <label class="form-label">Rasm yuklash</label>
+                                <div class="file-upload-area" id="category-file-upload-area">
+                                    <div class="upload-icon">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <div class="upload-text">
+                                        <p>Rasm yuklash uchun bosing</p>
+                                        <span>PNG, JPG, JPEG (Max: 10MB)</span>
+                                    </div>
+                                    <input type="file" id="category-file-input" accept="image/*" hidden>
+                                </div>
+                                <div class="uploaded-preview" id="category-file-preview"></div>
                             </div>
                             <div class="form-group">
                                 <div class="form-check">
@@ -375,7 +390,6 @@
                         <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Rasm</th>
                             <th>Nomi</th>
                             <th>Holati</th>
                             <th>Amallar</th>
@@ -383,7 +397,7 @@
                         </thead>
                         <tbody id="categories-list-table">
                         <tr>
-                            <td colspan="5" class="text-center text-muted">Yuklanmoqda...</td>
+                            <td colspan="4" class="text-center text-muted">Yuklanmoqda...</td>
                         </tr>
                         </tbody>
                     </table>
@@ -397,6 +411,43 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // DOM ready event listener qo'shish
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("DOM loaded, setting up image upload toggle...");
+
+        // Image upload toggle setup with delay
+        setTimeout(function() {
+            const enableImageUpload = document.getElementById("enable-image-upload");
+            const imageUploadSection = document.getElementById("image-upload-section");
+
+            console.log("Enable image upload element:", enableImageUpload);
+            console.log("Image upload section:", imageUploadSection);
+
+            if (enableImageUpload && imageUploadSection) {
+                enableImageUpload.addEventListener("change", function() {
+                    console.log("Toggle changed:", this.checked);
+                    if (this.checked) {
+                        imageUploadSection.style.display = "block";
+                        console.log("Image upload section shown");
+                    } else {
+                        imageUploadSection.style.display = "none";
+                        document.getElementById("category-file-input").value = "";
+                        document.getElementById("category-file-preview").innerHTML = "";
+                        // Call updateCategoryImagePreview if it exists
+                        if (typeof updateCategoryImagePreview === 'function') {
+                            updateCategoryImagePreview();
+                        }
+                        console.log("Image upload section hidden");
+                    }
+                });
+                console.log("Event listener added successfully");
+            } else {
+                console.error("Elements not found!");
+            }
+        }, 500);
+    });
+</script>
 <script src="categories-script.js"></script>
 </body>
 </html>

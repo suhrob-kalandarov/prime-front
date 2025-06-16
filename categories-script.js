@@ -8,9 +8,33 @@ const bootstrap = window.bootstrap
 
 // Initialize categories panel
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("DOM Content Loaded - Categories") // Debug
     checkAuth()
     initializeCategoriesPanel()
     loadCategoriesData()
+
+    // Manual setup for image upload toggle
+    setTimeout(() => {
+        const enableImageUpload = document.getElementById("enable-image-upload")
+        const imageUploadSection = document.getElementById("image-upload-section")
+
+        console.log("Enable image upload element:", enableImageUpload) // Debug
+        console.log("Image upload section:", imageUploadSection) // Debug
+
+        if (enableImageUpload) {
+            enableImageUpload.addEventListener("change", function () {
+                console.log("Toggle changed:", this.checked) // Debug
+                if (this.checked) {
+                    imageUploadSection.style.display = "block"
+                } else {
+                    imageUploadSection.style.display = "none"
+                    document.getElementById("category-file-input").value = ""
+                    document.getElementById("category-file-preview").innerHTML = ""
+                    updateCategoryImagePreview()
+                }
+            })
+        }
+    }, 100)
 })
 
 // Check authentication
@@ -27,6 +51,11 @@ function initializeCategoriesPanel() {
     setupSidebar()
     setupEventListeners()
     setupSearchInput()
+
+    // Setup image upload toggle with delay
+    setTimeout(() => {
+        setupImageUploadToggle()
+    }, 1000)
 }
 
 // Setup sidebar
@@ -58,7 +87,6 @@ function setupEventListeners() {
     window.showEditCategoryModal = showEditCategoryModal
     window.showViewCategoryModal = showViewCategoryModal
     window.saveCategory = saveCategory
-    window.deleteCategory = deleteCategory
     window.activateCategory = activateCategory
     window.deactivateCategory = deactivateCategory
     window.loadCategories = loadCategories
@@ -70,19 +98,53 @@ function setupEventListeners() {
     window.logout = logout
     window.showActiveCategoriesModal = showActiveCategoriesModal
     window.showInactiveCategoriesModal = showInactiveCategoriesModal
+    window.removePreview = removePreview
 
-    // Setup attachment selection change
-    const attachmentSelect = document.getElementById("category-attachment")
-    if (attachmentSelect) {
-        attachmentSelect.addEventListener("change", updateImagePreview)
+    // Setup file upload
+    setupCategoryFileUpload()
+}
+
+// Setup image upload toggle
+function setupImageUploadToggle() {
+    const enableImageUpload = document.getElementById("enable-image-upload")
+    const imageUploadSection = document.getElementById("image-upload-section")
+
+    console.log("Setting up image upload toggle...")
+    console.log("Enable image upload:", enableImageUpload)
+    console.log("Image upload section:", imageUploadSection)
+
+    if (enableImageUpload && imageUploadSection) {
+        // Remove existing listeners
+        enableImageUpload.removeEventListener("change", toggleImageUploadSection)
+
+        // Add new listener
+        enableImageUpload.addEventListener("change", function () {
+            console.log("Toggle state changed:", this.checked)
+            if (this.checked) {
+                imageUploadSection.style.display = "block"
+                console.log("Image upload section displayed")
+            } else {
+                imageUploadSection.style.display = "none"
+                document.getElementById("category-file-input").value = ""
+                document.getElementById("category-file-preview").innerHTML = ""
+                updateCategoryImagePreview()
+                console.log("Image upload section hidden")
+            }
+        })
+
+        console.log("Image upload toggle setup completed")
+    } else {
+        console.error("Image upload elements not found!")
     }
 }
 
 // API request with token
 async function apiRequest(url, options = {}) {
     const token = localStorage.getItem("accessToken")
+    console.log("Making API request to:", `${API_BASE_URL}${url}`) // Debug
 
     if (!token) {
+        console.log("No token found, redirecting to login") // Debug
         window.location.href = "login.html"
         return null
     }
@@ -98,7 +160,10 @@ async function apiRequest(url, options = {}) {
             headers,
         })
 
+        console.log("API Response status:", response.status) // Debug
+
         if (response.status === 401) {
+            console.log("Unauthorized, redirecting to login") // Debug
             window.location.href = "login.html"
             return null
         }
@@ -109,9 +174,13 @@ async function apiRequest(url, options = {}) {
 
         const contentType = response.headers.get("content-type")
         if (contentType && contentType.includes("application/json")) {
-            return await response.json()
+            const data = await response.json()
+            console.log("API Response data:", data) // Debug
+            return data
         } else {
-            return await response.text()
+            const text = await response.text()
+            console.log("API Response text:", text) // Debug
+            return text
         }
     } catch (error) {
         console.error("API request error:", error)
@@ -124,7 +193,7 @@ async function loadCategoriesData() {
     try {
         showLoading()
 
-        await Promise.all([loadCategoryStats(), loadCategories(), loadAttachments()])
+        await Promise.all([loadCategoryStats(), loadCategories()])
 
         hideLoading()
     } catch (error) {
@@ -160,13 +229,13 @@ async function loadCategoryStats() {
 // Load categories
 async function loadCategories() {
     try {
-        const [activeCategories, inactiveCategories] = await Promise.all([
-            apiRequest("/api/v1/admin/categories/active"),
-            apiRequest("/api/v1/admin/categories/inactive"),
-        ])
+        console.log("Loading categories...") // Debug
+        const allCategoriesData = await apiRequest("/api/v1/admin/categories")
+        console.log("Categories data:", allCategoriesData) // Debug
 
-        allCategories = [...(activeCategories || []), ...(inactiveCategories || [])]
+        allCategories = allCategoriesData || []
         filteredCategories = [...allCategories]
+        console.log("All categories:", allCategories) // Debug
         renderCategoriesTable(filteredCategories)
     } catch (error) {
         console.error("Error loading categories:", error)
@@ -174,33 +243,18 @@ async function loadCategories() {
     }
 }
 
-// Load attachments for dropdown
-async function loadAttachments() {
-    try {
-        const attachments = await apiRequest("/api/v1/admin/attachments/active")
-        const attachmentSelect = document.getElementById("category-attachment")
-
-        if (attachmentSelect && attachments) {
-            attachmentSelect.innerHTML = '<option value="">Rasmni tanlang</option>'
-            attachments.forEach((attachment) => {
-                const option = document.createElement("option")
-                option.value = attachment.id
-                option.textContent = attachment.filename || attachment.name || `Attachment ${attachment.id}`
-                attachmentSelect.appendChild(option)
-            })
-        }
-    } catch (error) {
-        console.error("Error loading attachments:", error)
-    }
-}
-
 // Render categories table
 function renderCategoriesTable(categories) {
     const tbody = document.getElementById("categories-table")
-    if (!tbody) return
+    if (!tbody) {
+        console.error("Categories table tbody not found") // Debug
+        return
+    }
+
+    console.log("Rendering categories:", categories) // Debug
 
     if (categories.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Ma\'lumotlar mavjud emas</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Ma\'lumotlar mavjud emas</td></tr>'
         return
     }
 
@@ -209,16 +263,6 @@ function renderCategoriesTable(categories) {
             (category) => `
         <tr class="fade-in">
             <td>${category.id}</td>
-            <td>
-                ${
-                category.attachmentId
-                    ? `<img src="${API_BASE_URL}/api/v1/attachment/${category.attachmentId}" 
-                           class="rounded" 
-                           style="width: 40px; height: 40px; object-fit: cover;"
-                           onerror="this.src='/placeholder.svg?height=40&width=40'">`
-                    : '<i class="fas fa-image text-muted"></i>'
-            }
-            </td>
             <td class="fw-bold">${category.name}</td>
             <td>
                 <span class="status-badge ${category.active ? "active" : "inactive"}">
@@ -256,10 +300,18 @@ function showAddCategoryModal() {
     document.getElementById("category-form").reset()
     document.getElementById("category-id").value = ""
     document.getElementById("category-active").checked = true
-    updateImagePreview()
+    document.getElementById("enable-image-upload").checked = false
+    document.getElementById("image-upload-section").style.display = "none"
+    document.getElementById("category-file-preview").innerHTML = ""
+    updateCategoryImagePreview()
 
     const modal = new bootstrap.Modal(document.getElementById("categoryModal"))
     modal.show()
+
+    // Setup toggle after modal is shown
+    setTimeout(() => {
+        setupImageUploadToggle()
+    }, 500)
 }
 
 // Show edit category modal
@@ -291,6 +343,25 @@ async function showEditCategoryModal(categoryId) {
 // Show view category modal
 async function showViewCategoryModal(categoryId) {
     try {
+        // Close any existing modals first
+        const existingModals = document.querySelectorAll(".modal.show")
+        existingModals.forEach((modal) => {
+            const modalInstance = bootstrap.Modal.getInstance(modal)
+            if (modalInstance) {
+                modalInstance.hide()
+            }
+        })
+
+        // Clean up backdrops
+        setTimeout(() => {
+            const backdrops = document.querySelectorAll(".modal-backdrop")
+            backdrops.forEach((backdrop) => backdrop.remove())
+
+            document.body.classList.remove("modal-open")
+            document.body.style.overflow = ""
+            document.body.style.paddingRight = ""
+        }, 200)
+
         const category = await apiRequest(`/api/v1/admin/category/${categoryId}`)
 
         if (!category) {
@@ -333,8 +404,14 @@ async function showViewCategoryModal(categoryId) {
       `
         }
 
-        const modal = new bootstrap.Modal(document.getElementById("viewCategoryModal"))
-        modal.show()
+        setTimeout(() => {
+            const modal = new bootstrap.Modal(document.getElementById("viewCategoryModal"), {
+                backdrop: true,
+                keyboard: true,
+                focus: true,
+            })
+            modal.show()
+        }, 300)
     } catch (error) {
         console.error("Error viewing category:", error)
         showNotification("error", "Kategoriya ma'lumotlarini yuklashda xatolik")
@@ -346,17 +423,49 @@ async function saveCategory() {
     try {
         const categoryId = document.getElementById("category-id").value
         const name = document.getElementById("category-name").value.trim()
-        const attachmentId = document.getElementById("category-attachment").value
         const active = document.getElementById("category-active").checked
+        const enableImageUpload = document.getElementById("enable-image-upload").checked
+        const fileInput = document.getElementById("category-file-input")
 
         if (!name) {
             showNotification("warning", "Kategoriya nomini kiriting")
             return
         }
 
+        let attachmentId = null
+
+        // If image upload is enabled and file is selected, upload it first
+        if (enableImageUpload && fileInput.files.length > 0) {
+            const file = fileInput.files[0]
+
+            try {
+                const formData = new FormData()
+                formData.append("file", file)
+
+                const uploadResponse = await fetch(`${API_BASE_URL}/api/v1/admin/attachment`, {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                    },
+                    body: formData,
+                })
+
+                if (!uploadResponse.ok) {
+                    throw new Error("Failed to upload image")
+                }
+
+                const uploadResult = await uploadResponse.json()
+                attachmentId = uploadResult.id
+            } catch (uploadError) {
+                console.error("Error uploading image:", uploadError)
+                showNotification("error", "Rasmni yuklashda xatolik")
+                return
+            }
+        }
+
         const categoryData = {
             name: name,
-            attachmentId: attachmentId ? Number.parseInt(attachmentId) : null,
+            attachmentId: attachmentId,
             active: active,
         }
 
@@ -530,23 +639,13 @@ function showCategoriesListModal(title, categories) {
 
     const tbody = document.getElementById("categories-list-table")
     if (categories.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Ma\'lumotlar mavjud emas</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Ma\'lumotlar mavjud emas</td></tr>'
     } else {
         tbody.innerHTML = categories
             .map(
                 (category) => `
           <tr>
               <td>${category.id}</td>
-              <td>
-                  ${
-                    category.attachmentId
-                        ? `<img src="${API_BASE_URL}/api/v1/attachment/${category.attachmentId}" 
-                             class="rounded" 
-                             style="width: 40px; height: 40px; object-fit: cover;"
-                             onerror="this.src='/placeholder.svg?height=40&width=40'">`
-                        : '<i class="fas fa-image text-muted"></i>'
-                }
-              </td>
               <td class="fw-bold">${category.name}</td>
               <td>
                   <span class="status-badge ${category.active ? "active" : "inactive"}">
@@ -578,6 +677,112 @@ function showCategoriesListModal(title, categories) {
 
     const modal = new bootstrap.Modal(document.getElementById("categoriesListModal"))
     modal.show()
+}
+
+// Setup category file upload
+function setupCategoryFileUpload() {
+    const uploadArea = document.getElementById("category-file-upload-area")
+    const fileInput = document.getElementById("category-file-input")
+    const preview = document.getElementById("category-file-preview")
+
+    if (!uploadArea || !fileInput || !preview) return
+
+    uploadArea.addEventListener("click", () => fileInput.click())
+
+    uploadArea.addEventListener("dragover", (e) => {
+        e.preventDefault()
+        uploadArea.classList.add("dragover")
+    })
+
+    uploadArea.addEventListener("dragleave", () => {
+        uploadArea.classList.remove("dragover")
+    })
+
+    uploadArea.addEventListener("drop", (e) => {
+        e.preventDefault()
+        uploadArea.classList.remove("dragover")
+        const files = e.dataTransfer.files
+        if (files.length > 0) {
+            fileInput.files = files
+            handleCategoryFilePreview(files[0], preview)
+        }
+    })
+
+    fileInput.addEventListener("change", (e) => {
+        if (e.target.files.length > 0) {
+            handleCategoryFilePreview(e.target.files[0], preview)
+        }
+    })
+}
+
+// Handle category file preview
+function handleCategoryFilePreview(file, preview) {
+    preview.innerHTML = ""
+
+    if (file.type.startsWith("image/")) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            const previewItem = document.createElement("div")
+            previewItem.className = "preview-item"
+            previewItem.innerHTML = `
+        <img src="${e.target.result}" alt="Preview">
+        <button type="button" class="preview-remove" onclick="removePreview(this)">
+            <i class="fas fa-times"></i>
+        </button>
+      `
+            preview.appendChild(previewItem)
+
+            // Update main preview
+            updateCategoryImagePreview(e.target.result)
+        }
+        reader.readAsDataURL(file)
+    }
+}
+
+// Toggle image upload section
+function toggleImageUploadSection() {
+    const enableImageUpload = document.getElementById("enable-image-upload")
+    const imageUploadSection = document.getElementById("image-upload-section")
+
+    if (enableImageUpload.checked) {
+        imageUploadSection.style.display = "block"
+    } else {
+        imageUploadSection.style.display = "none"
+        // Clear file input and preview
+        document.getElementById("category-file-input").value = ""
+        document.getElementById("category-file-preview").innerHTML = ""
+        updateCategoryImagePreview()
+    }
+}
+
+// Remove preview
+function removePreview(button) {
+    button.parentElement.remove()
+    document.getElementById("category-file-input").value = ""
+    updateCategoryImagePreview()
+}
+
+// Update category image preview
+function updateCategoryImagePreview(imageSrc = null) {
+    const previewContainer = document.getElementById("category-image-preview")
+
+    if (imageSrc) {
+        previewContainer.innerHTML = `
+      <img src="${imageSrc}" 
+           class="img-fluid rounded" 
+           alt="Category Image"
+           style="max-height: 200px; object-fit: contain;">
+    `
+    } else {
+        previewContainer.innerHTML = `
+      <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 200px;">
+          <div class="text-center">
+              <i class="fas fa-image fa-3x text-muted mb-3"></i>
+              <div class="text-muted">Rasm tanlanmagan</div>
+          </div>
+      </div>
+    `
+    }
 }
 
 // Update image preview
