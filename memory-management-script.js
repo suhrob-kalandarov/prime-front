@@ -138,7 +138,7 @@ function renderInactiveImagesTable() {
     if (!tbody) return
 
     if (inactiveImages.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nofaol rasmlar mavjud emas</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nofaol rasmlar mavjud emas</td></tr>'
         return
     }
 
@@ -153,9 +153,6 @@ function renderInactiveImagesTable() {
             <td class="text-truncate" style="max-width: 150px;" title="${image.filename || image.name}">${image.filename || image.name || "N/A"}</td>
             <td>
                 ${image.productId ? `<span class="badge bg-primary">${image.productId}</span>` : '<span class="badge bg-secondary">NO-LINKED</span>'}
-            </td>
-            <td>
-                <span class="badge bg-info">${formatFileSize(image.size || 0)}</span>
             </td>
             <td>
                 <button class="action-btn edit" onclick="viewImage(${image.id})" title="Ko'rish">
@@ -182,7 +179,6 @@ async function viewImage(imageId) {
         }
 
         // Create and show view modal (reuse from files.html)
-        // Implementation similar to files-script.js viewFile function
         showNotification("info", `Rasm ID: ${imageId} ko'rish funksiyasi`)
     } catch (error) {
         console.error("Error viewing image:", error)
@@ -358,7 +354,7 @@ function hideLoading() {
 function showNotification(type, message) {
     const notification = document.createElement("div")
     notification.className = `alert alert-${type === "success" ? "success" : type === "error" ? "danger" : type === "warning" ? "warning" : "info"} alert-dismissible fade show position-fixed`
-    notification.style.cssText = "top: 20px; right: 20px; z-index: 9999; max-width: 350px; animation: slideIn 0.3s ease;"
+    notification.style.cssText = "top: 20px; right: 20px; z-index: 10000; max-width: 350px; animation: slideIn 0.3s ease;"
 
     notification.innerHTML = `
         <i class="fas fa-${type === "success" ? "check-circle" : type === "error" ? "exclamation-circle" : type === "warning" ? "exclamation-triangle" : "info-circle"} me-2"></i>
