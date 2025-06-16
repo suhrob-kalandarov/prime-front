@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = "http://16.171.152.61"
+const API_BASE_URL = "http://localhost:8080"
 
 // DOM Elements
 const loginForm = document.getElementById("login-form")
